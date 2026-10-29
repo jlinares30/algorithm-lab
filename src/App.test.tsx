@@ -13,11 +13,12 @@ describe('Página inicial', () => {
       .toContain('Python')
   })
 
-  it('identifica la etapa inicial sin ofrecer visualizadores todavía', () => {
+  it('ofrece el primer visualizador con entradas para Python', () => {
     render(<App />)
 
-    const status = screen.getByRole('region', { name: 'Tu laboratorio empieza aquí' })
-    expect(status.textContent).toContain('Etapa 1 · Preparación')
-    expect(status.textContent).toContain('se incorporarán')
+    const lab = screen.getByRole('region', { name: 'Binary Search' })
+    expect(lab.textContent).toContain('Pyodide')
+    expect(screen.getByLabelText('Lista ordenada')).toBeDefined()
+    expect(screen.getByRole('button', { name: 'Ejecutar búsqueda' })).toBeDefined()
   })
 })
