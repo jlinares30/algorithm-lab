@@ -58,7 +58,8 @@ describe('Modo Inmersivo 3D de Binary Search', () => {
     expect(screen.getByText('Algorithm Lab 3D')).toBeDefined()
     expect(screen.getByText(/Paso/)).toBeDefined()
     expect(screen.getByText(/Objetivo:/)).toBeDefined()
-    expect(screen.getByText(/27 < 69/)).toBeDefined()
+    expect(screen.getAllByText(/27 < 69/)[0]).toBeDefined()
+    expect(screen.getByText(/Se descarta la mitad izquierda/)).toBeDefined()
     expect(screen.getByText(/left=0 · mid=5 · right=10/)).toBeDefined()
 
     // Controls

@@ -52,8 +52,8 @@ function FloorRangeHighlight({
     if (!mesh) return
 
     if (!isInitialized.current) {
-      mesh.position.x = targetX
-      mesh.scale.x = targetWidth
+      mesh.position.set(targetX, 0.02, 0)
+      mesh.scale.set(targetWidth, 1, 1)
       isInitialized.current = true
       return
     }
@@ -66,8 +66,6 @@ function FloorRangeHighlight({
   return (
     <mesh
       ref={meshRef}
-      position={[targetX, 0.02, 0]}
-      scale={[targetWidth, 1, 1]}
       rotation={[-Math.PI / 2, 0, 0]}
     >
       <planeGeometry args={[1, 3.5]} />
@@ -103,22 +101,31 @@ function SceneContent({
 
   const isInstanced = count > 64
 
-  // Progress ref subscribed to clock (0.0 -> 1.0)
-  const progressRef = useRef(1)
-  const [currentProgress, setCurrentProgress] = useState(1)
+  // Track event changes so step advances start smoothly at progress 0 without flashing the previous step
+  const [prevEvent, setPrevEvent] = useState<SearchEvent | null>(event)
+  const [currentProgress, setCurrentProgress] = useState(event ? 0 : 1)
+
+  if (prevEvent !== event) {
+    setPrevEvent(event)
+    setCurrentProgress(event ? 0 : 1)
+  }
 
   useEffect(() => {
     if (!clock) return
     return clock.subscribe((p) => {
-      progressRef.current = p
       setCurrentProgress(p)
     })
   }, [clock, revision])
 
+  // Scale fog dynamically to never obscure large arrays or distant pointer beacons
+  const fullWidth = count * spacing
+  const fogFar = Math.max(160, fullWidth * 2.8 + 120)
+  const fogNear = Math.max(45, fogFar * 0.35)
+
   return (
     <>
       <color attach="background" args={['#020617']} />
-      <fog attach="fog" args={['#020617', 25, 120]} />
+      <fog attach="fog" args={['#020617', fogNear, fogFar]} />
 
       <ambientLight intensity={0.7} />
       <directionalLight
@@ -131,7 +138,10 @@ function SceneContent({
       <pointLight position={[0, 8, 5]} intensity={0.3} color="#34d399" />
 
       {/* Ground plane & grid */}
-      <gridHelper args={[240, 120, '#334155', '#0f172a']} position={[0, 0, 0]} />
+      <gridHelper
+        args={[Math.max(240, fullWidth * 2.2), 120, '#334155', '#0f172a']}
+        position={[0, 0, 0]}
+      />
 
       {/* Active Range Highlight on the floor */}
       {before && count > 0 && (

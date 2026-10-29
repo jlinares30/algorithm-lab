@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { Color, Matrix4, Quaternion, Vector3 } from 'three'
-import type { InstancedMesh } from 'three'
+import type { Group, InstancedMesh } from 'three'
 import { useFrame } from '@react-three/fiber'
-import { Html } from '@react-three/drei'
 import type { SearchEvent } from '../../../execution/binarySearch'
 import type { ArrayItem } from '../../../components/ArrayVisualization'
 import type { IndexRange } from './animation3d'
 import { getElement3DTarget } from './animation3d'
+import { createPointerBeaconTexture } from './badgeTexture'
 
 interface Props {
   items: ArrayItem[]
@@ -41,13 +41,18 @@ export function ArrayInstanced3D({
   onSelect,
 }: Props) {
   const meshRef = useRef<InstancedMesh>(null)
+  const leftGroupRef = useRef<Group>(null)
+  const midGroupRef = useRef<Group>(null)
+  const rightGroupRef = useRef<Group>(null)
+
   const count = items.length
   const span = maxVal - minVal || 1
 
   const currentLeft = event ? event.left : before.left
   const currentRight = event ? event.right : before.right
+  const currentMid = event?.mid ?? null
 
-  // Heights array
+  // Heights array computed from item values
   const heights = useMemo(() => {
     return items.map((item) => Math.max(0.9, ((item.value - minVal) / span) * 4.2 + 0.9))
   }, [items, minVal, span])
@@ -60,6 +65,10 @@ export function ArrayInstanced3D({
   } | null>(null)
 
   useEffect(() => {
+    // Prevent wiping buffer on step transitions to eliminate visual flashing
+    if (buffersRef.current && buffersRef.current.positions.length === count * 3) {
+      return
+    }
     const pArr = new Float32Array(count * 3)
     const sArr = new Float32Array(count * 3)
     const cArr = new Float32Array(count * 3)
@@ -80,6 +89,47 @@ export function ArrayInstanced3D({
     buffersRef.current = { positions: pArr, scales: sArr, colors: cArr }
   }, [count, heights, spacing])
 
+  // Native 3D WebGL pointer beacon textures for high visibility at large scales
+  const leftTexture = useMemo(() => {
+    if (currentLeft < 0 || currentLeft >= count) return null
+    return createPointerBeaconTexture({
+      pointer: 'L',
+      index: currentLeft,
+      value: items[currentLeft]?.value,
+    })
+  }, [currentLeft, count, items])
+
+  const midTexture = useMemo(() => {
+    if (currentMid === null || currentMid < 0 || currentMid >= count) return null
+    return createPointerBeaconTexture({
+      pointer: 'M',
+      index: currentMid,
+      value: items[currentMid]?.value,
+    })
+  }, [currentMid, count, items])
+
+  const rightTexture = useMemo(() => {
+    if (currentRight < 0 || currentRight >= count) return null
+    return createPointerBeaconTexture({
+      pointer: 'R',
+      index: currentRight,
+      value: items[currentRight]?.value,
+    })
+  }, [currentRight, count, items])
+
+  useEffect(() => {
+    return () => {
+      leftTexture?.dispose()
+      midTexture?.dispose()
+      rightTexture?.dispose()
+    }
+  }, [leftTexture, midTexture, rightTexture])
+
+  // Target X coordinates for the pointer beacons
+  const leftTargetX = currentLeft >= 0 && currentLeft < count ? (currentLeft - (count - 1) / 2) * spacing : 0
+  const midTargetX = currentMid !== null && currentMid >= 0 && currentMid < count ? (currentMid - (count - 1) / 2) * spacing : 0
+  const rightTargetX = currentRight >= 0 && currentRight < count ? (currentRight - (count - 1) / 2) * spacing : 0
+
   useFrame((_, delta) => {
     const mesh = meshRef.current
     const buffers = buffersRef.current
@@ -88,13 +138,23 @@ export function ArrayInstanced3D({
     const currentPositions = buffers.positions
     const currentScales = buffers.scales
     const currentColors = buffers.colors
-    if (!mesh) return
 
     const prefersReducedMotion =
       typeof window !== 'undefined' &&
       window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
 
     const damp = prefersReducedMotion ? 1 : Math.min(1, delta * 12)
+
+    // Smoothly glide beacon groups across the array
+    if (leftGroupRef.current) {
+      leftGroupRef.current.position.x += (leftTargetX - leftGroupRef.current.position.x) * damp
+    }
+    if (midGroupRef.current) {
+      midGroupRef.current.position.x += (midTargetX - midGroupRef.current.position.x) * damp
+    }
+    if (rightGroupRef.current) {
+      rightGroupRef.current.position.x += (rightTargetX - rightGroupRef.current.position.x) * damp
+    }
 
     for (let i = 0; i < count; i++) {
       const h = heights[i]
@@ -133,9 +193,25 @@ export function ArrayInstanced3D({
       const cr = currentColors[i * 3]
       const cg = currentColors[i * 3 + 1]
       const cb = currentColors[i * 3 + 2]
-      currentColors[i * 3] = cr + (target.color.r - cr) * damp
-      currentColors[i * 3 + 1] = cg + (target.color.g - cg) * damp
-      currentColors[i * 3 + 2] = cb + (target.color.b - cb) * damp
+
+      let targetR = target.color.r
+      let targetG = target.color.g
+      let targetB = target.color.b
+
+      // Give distinct glowing highlight to Left (sky-blue) and Right (purple) in large arrays
+      if (i === currentLeft && i !== currentMid) {
+        targetR = 0.22
+        targetG = 0.74
+        targetB = 0.97
+      } else if (i === currentRight && i !== currentMid) {
+        targetR = 0.75
+        targetG = 0.52
+        targetB = 0.99
+      }
+
+      currentColors[i * 3] = cr + (targetR - cr) * damp
+      currentColors[i * 3 + 1] = cg + (targetG - cg) * damp
+      currentColors[i * 3 + 2] = cb + (targetB - cb) * damp
 
       tempColor.setRGB(
         currentColors[i * 3],
@@ -148,6 +224,23 @@ export function ArrayInstanced3D({
     mesh.instanceMatrix.needsUpdate = true
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
   })
+
+  // Dimensions for tapered beacons
+  const spriteH = 1.9
+  const leftH = heights[currentLeft] ?? 1.5
+  const leftBadgeCenterY = leftH + 1.1 + spriteH / 2
+  const leftNeedleLen = 1.1
+  const leftNeedleCenterY = leftH + leftNeedleLen / 2
+
+  const midH = heights[currentMid ?? 0] ?? 1.5
+  const midBadgeCenterY = midH + 1.1 + spriteH / 2
+  const midNeedleLen = 1.1
+  const midNeedleCenterY = midH + midNeedleLen / 2
+
+  const rightH = heights[currentRight] ?? 1.5
+  const rightBadgeCenterY = rightH + 1.1 + spriteH / 2
+  const rightNeedleLen = 1.1
+  const rightNeedleCenterY = rightH + rightNeedleLen / 2
 
   return (
     <group>
@@ -170,52 +263,96 @@ export function ArrayInstanced3D({
         />
       </instancedMesh>
 
-      {/* Floating badges for active pointers in large array mode */}
-      {currentLeft >= 0 && currentLeft < count && (
-        <group
-          position={[
-            (currentLeft - (count - 1) / 2) * spacing,
-            (heights[currentLeft] ?? 2) + 1.2,
-            0,
-          ]}
-        >
-          <Html center distanceFactor={22} className="pointer-events-none select-none">
-            <span className="rounded bg-sky-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-md">
-              L [{currentLeft}]
-            </span>
-          </Html>
+      {/* 1. Left Pointer 3D Beacon, Needle and Floor Ring */}
+      {leftTexture && currentLeft >= 0 && currentLeft < count && (
+        <group ref={leftGroupRef} position={[leftTargetX, 0, 0]}>
+          {/* Glowing floor ring */}
+          <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.22, 0.88, 32]} />
+            <meshBasicMaterial color="#38bdf8" transparent opacity={0.65} depthWrite={false} />
+          </mesh>
+
+          {/* Tapered beacon pin from bar to badge */}
+          <mesh position={[0, leftNeedleCenterY, 0]}>
+            <cylinderGeometry args={[0.025, 0.065, leftNeedleLen, 16]} />
+            <meshBasicMaterial color="#38bdf8" transparent opacity={0.8} depthWrite={false} />
+          </mesh>
+
+          {/* Native 3D Billboard Sprite Badge */}
+          <sprite
+            position={[0, leftBadgeCenterY, 0]}
+            scale={[3.3, 1.86, 1]}
+            renderOrder={999}
+          >
+            <spriteMaterial
+              map={leftTexture}
+              depthTest={false}
+              depthWrite={false}
+              transparent
+            />
+          </sprite>
         </group>
       )}
 
-      {event?.mid !== null && event?.mid !== undefined && (
-        <group
-          position={[
-            (event.mid - (count - 1) / 2) * spacing,
-            (heights[event.mid] ?? 2) + 1.2,
-            0,
-          ]}
-        >
-          <Html center distanceFactor={22} className="pointer-events-none select-none">
-              <span className="rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-bold text-slate-950 shadow-md">
-                M [{event.mid}]
-              </span>
-          </Html>
+      {/* 2. Mid Pointer 3D Beacon, Needle and Floor Ring */}
+      {midTexture && currentMid !== null && currentMid >= 0 && currentMid < count && (
+        <group ref={midGroupRef} position={[midTargetX, 0, 0]}>
+          {/* Glowing floor ring */}
+          <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.22, 0.88, 32]} />
+            <meshBasicMaterial color="#fbbf24" transparent opacity={0.65} depthWrite={false} />
+          </mesh>
+
+          {/* Tapered beacon pin from bar to badge */}
+          <mesh position={[0, midNeedleCenterY, 0]}>
+            <cylinderGeometry args={[0.025, 0.065, midNeedleLen, 16]} />
+            <meshBasicMaterial color="#fbbf24" transparent opacity={0.8} depthWrite={false} />
+          </mesh>
+
+          {/* Native 3D Billboard Sprite Badge */}
+          <sprite
+            position={[0, midBadgeCenterY, 0]}
+            scale={[3.3, 1.86, 1]}
+            renderOrder={999}
+          >
+            <spriteMaterial
+              map={midTexture}
+              depthTest={false}
+              depthWrite={false}
+              transparent
+            />
+          </sprite>
         </group>
       )}
 
-      {currentRight >= 0 && currentRight < count && (
-        <group
-          position={[
-            (currentRight - (count - 1) / 2) * spacing,
-            (heights[currentRight] ?? 2) + 1.2,
-            0,
-          ]}
-        >
-          <Html center distanceFactor={22} className="pointer-events-none select-none">
-            <span className="rounded bg-purple-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-md">
-              R [{currentRight}]
-            </span>
-          </Html>
+      {/* 3. Right Pointer 3D Beacon, Needle and Floor Ring */}
+      {rightTexture && currentRight >= 0 && currentRight < count && (
+        <group ref={rightGroupRef} position={[rightTargetX, 0, 0]}>
+          {/* Glowing floor ring */}
+          <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.22, 0.88, 32]} />
+            <meshBasicMaterial color="#c084fc" transparent opacity={0.65} depthWrite={false} />
+          </mesh>
+
+          {/* Tapered beacon pin from bar to badge */}
+          <mesh position={[0, rightNeedleCenterY, 0]}>
+            <cylinderGeometry args={[0.025, 0.065, rightNeedleLen, 16]} />
+            <meshBasicMaterial color="#c084fc" transparent opacity={0.8} depthWrite={false} />
+          </mesh>
+
+          {/* Native 3D Billboard Sprite Badge */}
+          <sprite
+            position={[0, rightBadgeCenterY, 0]}
+            scale={[3.3, 1.86, 1]}
+            renderOrder={999}
+          >
+            <spriteMaterial
+              map={rightTexture}
+              depthTest={false}
+              depthWrite={false}
+              transparent
+            />
+          </sprite>
         </group>
       )}
     </group>

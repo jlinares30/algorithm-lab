@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
+import type { ComponentRef } from 'react'
 import { Vector3 } from 'three'
 import type { IndexRange } from './animation3d'
 import { smoothstep } from './animation3d'
@@ -23,7 +23,7 @@ export function CameraRig({
   spacing,
   resetTrigger,
 }: Props) {
-  const controlsRef = useRef<OrbitControlsImpl>(null)
+  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null)
   const { camera } = useThree()
   const isInteracting = useRef(false)
   const userHasMovedCamera = useRef(false)
@@ -41,7 +41,13 @@ export function CameraRig({
   const activeSpan = Math.max(1, curRight - curLeft + 1)
 
   // Camera framing: targetDistance ensures clean array overview while focusing gently on active range
-  const targetDistance = Math.max(18, Math.min(65, activeSpan * spacing * 1.35 + 13))
+  const fullArraySpan = count * spacing
+  // Maximum camera framing distance needed to comfortably view the entire array
+  const maxFrameDistance = Math.max(65, fullArraySpan * 0.95 + 16)
+  const targetDistance = Math.max(
+    18,
+    Math.min(maxFrameDistance, activeSpan * spacing * 1.15 + 15)
+  )
 
   // Update desired camera focus whenever the target range changes
   useEffect(() => {
@@ -89,6 +95,8 @@ export function CameraRig({
     controls.update()
   })
 
+  const maxOrbitDist = Math.max(160, fullArraySpan * 2.5 + 80)
+
   return (
     <OrbitControls
       ref={controlsRef}
@@ -96,7 +104,7 @@ export function CameraRig({
       enableDamping
       dampingFactor={0.08}
       minDistance={5}
-      maxDistance={120}
+      maxDistance={maxOrbitDist}
       maxPolarAngle={Math.PI / 2 + 0.05} // don't go below ground plane
       onStart={() => {
         isInteracting.current = true

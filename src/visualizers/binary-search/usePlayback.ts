@@ -50,7 +50,6 @@ export function usePlayback(total: number) {
       sample.current = null
       if (autoplay.current && position < total) {
         progress.current = 0
-        publish(0)
         setScrubTime(null)
         setPosition((current) => Math.min(current + 1, total))
       } else {
@@ -116,7 +115,6 @@ export function usePlayback(total: number) {
       sample.current = null
       autoplay.current = false
       progress.current = 0
-      publish(0)
       setScrubTime(null)
       setPosition((current) => Math.min(total, current + 1))
       setPlaying(true)
@@ -131,7 +129,6 @@ export function usePlayback(total: number) {
       } else {
         if (progress.current >= 1) {
           progress.current = 0
-          publish(0)
           if (position === total) setPosition(0)
           setRevision((current) => current + 1)
         }
