@@ -52,11 +52,15 @@ export function executeBinarySearch(numbers: number[], target: number): SearchEx
   let settled = false
   const result = new Promise<SearchResult>((resolve, reject) => {
     rejectPending = reject
-    worker.onmessage = ({ data }: MessageEvent<SearchResponse>) => {
+    worker.onmessage = (event: MessageEvent<SearchResponse>) => {
       settled = true
       worker.terminate()
-      if (data.ok) resolve(data.result)
-      else reject(new Error(data.error))
+      const response = event.data
+      if ('error' in response) {
+        reject(new Error(response.error))
+      } else {
+        resolve(response.result)
+      }
     }
     worker.onerror = () => {
       settled = true
