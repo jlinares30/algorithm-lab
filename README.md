@@ -6,7 +6,7 @@ algoritmos se escribirá manualmente en Python como parte del aprendizaje.
 
 ## Requisitos
 
-- Node.js 22.12+ (o 24 LTS) y npm.
+- Node.js 22.12+ (o 24 LTS), con npm o pnpm.
 - Python 3.10+ con `venv` y pip.
 
 ## Instalación
@@ -14,7 +14,13 @@ algoritmos se escribirá manualmente en Python como parte del aprendizaje.
 Desde la raíz del repositorio:
 
 ```bash
+# Con npm:
 npm ci
+
+# O alternativamente con pnpm:
+pnpm install
+
+# Entorno virtual de Python:
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements-dev.txt
@@ -117,6 +123,25 @@ Cada ejecución usa un worker aislado que se libera al terminar, cancelar o sali
 de la página. Editar el formulario no altera una reproducción ya cargada; hay que
 ejecutar de nuevo para aplicar los nuevos datos.
 
+## Modo Inmersivo 3D (WebGL / Three.js)
+
+Pulsa **⛶ Modo Inmersivo 3D** en la cabecera del visualizador para acceder a la experiencia espacial:
+
+1. **Entorno 3D Acelerado**: Escena volumétrica con sombras suaves, luces direccionales y niebla adaptativa que escala dinámicamente con el tamaño de la lista.
+2. **Representación Dual según Escala**:
+   - Arreglos pequeños y medianos ($\le 64$ elementos): barras tridimensionales individuales con grabado directo en el frontal de la geometría (`createFaceLabelTexture`) y badges superiores con punteros activos.
+   - Arreglos masivos (hasta 256 elementos): aceleración por hardware mediante instanciado GPU (`InstancedMesh`) con buffers tipados (`Float32Array`) continuos, logrando 60/120 fps fluidos sin parpadeos de transición.
+3. **Balizas Tridimensionales Nativas**: Indicadores **Left** (azul cielo), **Mid** (ámbar) y **Right** (violeta) generados como sprites WebGL billboard de alta densidad de píxeles (`badgeTexture.ts`) en estilo *dark glassmorphism*, con agujas cónicas y anillos luminosos sobre el suelo que planean suavemente a lo largo del arreglo.
+4. **Cámara Orbital y Seguimiento**:
+   - Arrastra con el botón izquierdo para orbitar libremente, botón derecho para desplazar y rueda para hacer zoom.
+   - `CameraRig` enfoca y encuadra adaptativamente el centro del rango activo `[left, right]` durante la búsqueda.
+   - Botón **⊙ Restablecer cámara** para recuperar la perspectiva óptima en cualquier momento.
+5. **HUD Superior e Inferior Flotante**:
+   - Tarjeta didáctica con explicaciones semánticas del paso actual y evaluación de condiciones.
+   - Tira interactiva de inspección rápida y panel flotante al hacer clic sobre cualquier barra 3D.
+   - Controles completos de reproducción y barra deslizante continua (`EventTimeline`).
+   - Atajos de teclado: `Espacio` (reproducir/pausar), `←` / `→` (paso anterior/siguiente) y `Escape` (volver a 2D).
+
 ## Estructura
 
 ```text
@@ -126,10 +151,23 @@ src/
   pages/HomePage.tsx    # Página de inicio
   components/           # Controles, línea de tiempo, vista del array y herramientas de entrada
   animations/           # Geometría de cámara, timeline GSAP y adaptador React
-  playback/             # Contrato del reloj de animación, independiente de GSAP
+  playback/             # Contrato del reloj de animación, independiente de GSAP y WebGL
   execution/            # Protocolo, cliente del worker y ejecución Pyodide
   visualizers/
-    binary-search/      # Modelo de eventos, hook de reproducción y vista React
+    binary-search/
+      BinarySearchLab.tsx        # Laboratorio principal con modos de entrada y pestañas
+      BinarySearchVisualizer.tsx # Escenario visual 2D
+      usePlayback.ts             # Motor de control temporal y reproducción continua
+      model.ts                   # Proyecciones inmutables de eventos y rangos
+      3d/
+        BinarySearch3DView.tsx   # Vista inmersiva a pantalla completa y HUD flotante
+        BinarySearch3DScene.tsx  # Canvas R3F, iluminación, niebla y suelo activo
+        ArrayBlock3D.tsx         # Bloques 3D individuales con grabado frontal
+        ArrayInstanced3D.tsx     # InstancedMesh para arrays grandes con buffers GPU
+        CameraRig.tsx            # Control orbital OrbitControls y seguimiento de cámara
+        badgeTexture.ts          # Generador de texturas Canvas HD para balizas y sprites
+        animation3d.ts           # Cálculo espacial de objetivos 3D y smoothstep
+        webgl.ts                 # Detección segura de soporte WebGL
   index.css             # Tailwind y estilos base
 python/
   algorithms/           # Lógica Python escrita por el estudiante
@@ -137,7 +175,7 @@ python/
 pyproject.toml          # Configuración de pytest
 requirements-dev.txt    # Dependencias Python de desarrollo
 vite.config.ts          # React, Tailwind y Vitest
-AGENTS.md               # Reglas de colaboración y aprendizaje
+AGENTS.md               # Reglas de colaboración y arquitectura
 ```
 
 ## Evolución prevista
