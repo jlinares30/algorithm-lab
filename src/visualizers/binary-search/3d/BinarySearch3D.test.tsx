@@ -101,6 +101,57 @@ describe('Modo Inmersivo 3D de Binary Search', () => {
     expect(playback.previous).toHaveBeenCalledOnce()
   })
 
+  it('no dispara atajos de reproducción desde el selector de velocidad ni con Espacio sobre un botón', () => {
+    const playback = mockPlayback(1, 1.0)
+    render(
+      <BinarySearch3DView
+        numbers={numbers}
+        target={69}
+        events={events}
+        playback={playback}
+        onExit={vi.fn()}
+      />
+    )
+
+    const speed = screen.getByRole('combobox')
+    fireEvent.keyDown(speed, { key: 'ArrowRight' })
+    fireEvent.keyDown(speed, { key: 'ArrowLeft' })
+    fireEvent.keyDown(speed, { key: ' ' })
+    expect(playback.next).not.toHaveBeenCalled()
+    expect(playback.previous).not.toHaveBeenCalled()
+    expect(playback.toggle).not.toHaveBeenCalled()
+
+    const resetCamera = screen.getByRole('button', { name: /Restablecer cámara/i })
+    fireEvent.keyDown(resetCamera, { key: ' ' })
+    expect(playback.toggle).not.toHaveBeenCalled()
+
+    // Arrow keys still step while a button has focus
+    fireEvent.keyDown(resetCamera, { key: 'ArrowRight' })
+    expect(playback.next).toHaveBeenCalledOnce()
+  })
+
+  it('muestra "No encontrado" cuando el rango queda vacío', () => {
+    const missing: SearchEvent[] = [
+      { left: 0, mid: 5, right: 10, action: 'move_right' },
+      { left: 6, mid: 8, right: 10, action: 'move_left' },
+      { left: 6, mid: 6, right: 7, action: 'move_left' },
+      { left: 6, mid: null, right: 5, action: 'not_found' },
+    ]
+    render(
+      <BinarySearch3DView
+        numbers={numbers}
+        target={30}
+        events={missing}
+        playback={mockPlayback(4, 4.0)}
+        onExit={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText(/No encontrado/)).toBeDefined()
+    expect(screen.queryByText(/Mitad der\. descartada/)).toBeNull()
+    expect(screen.getByText('Rango vacío')).toBeDefined()
+  })
+
   it('sincroniza el botón de restablecer cámara', () => {
     const playback = mockPlayback(1, 1.0)
     render(

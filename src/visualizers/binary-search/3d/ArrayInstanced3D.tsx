@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
+import type { RefObject } from 'react'
 import { Color, Matrix4, Quaternion, Vector3 } from 'three'
 import type { Group, InstancedMesh } from 'three'
 import { useFrame } from '@react-three/fiber'
@@ -13,7 +14,7 @@ interface Props {
   event: SearchEvent | null
   before: IndexRange
   after: IndexRange
-  progress: number
+  progressRef: RefObject<number>
   selectedIndex: number | null
   minVal: number
   maxVal: number
@@ -33,7 +34,7 @@ export function ArrayInstanced3D({
   event,
   before,
   after,
-  progress,
+  progressRef,
   selectedIndex,
   minVal,
   maxVal,
@@ -144,6 +145,7 @@ export function ArrayInstanced3D({
       window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
 
     const damp = prefersReducedMotion ? 1 : Math.min(1, delta * 12)
+    const progress = progressRef.current
 
     // Smoothly glide beacon groups across the array
     if (leftGroupRef.current) {

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { RefObject } from 'react'
 import type { Mesh, MeshStandardMaterial, Sprite } from 'three'
 import { useFrame } from '@react-three/fiber'
 import type { SearchEvent } from '../../../execution/binarySearch'
@@ -14,7 +15,7 @@ interface Props {
   event: SearchEvent | null
   before: IndexRange
   after: IndexRange
-  progress: number
+  progressRef: RefObject<number>
   isSelected: boolean
   showLabel: boolean
   onClick: (index: number) => void
@@ -28,7 +29,7 @@ export function ArrayBlock3D({
   event,
   before,
   after,
-  progress,
+  progressRef,
   isSelected,
   showLabel,
   onClick,
@@ -97,7 +98,7 @@ export function ArrayBlock3D({
       event,
       before,
       after,
-      progress,
+      progressRef.current,
       isSelected,
       false
     )
@@ -110,7 +111,7 @@ export function ArrayBlock3D({
     mat.opacity = target.opacity
     mat.transparent = target.transparent
     isInitialized.current = true
-  }, [index, height, event, before, after, progress, isSelected])
+  }, [index, height, event, before, after, progressRef, isSelected])
 
   useFrame((_, delta) => {
     const mesh = meshRef.current
@@ -123,7 +124,7 @@ export function ArrayBlock3D({
       event,
       before,
       after,
-      progress,
+      progressRef.current,
       isSelected,
       hovered
     )

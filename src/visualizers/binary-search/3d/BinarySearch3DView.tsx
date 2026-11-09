@@ -53,13 +53,27 @@ export function BinarySearch3DView({
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         onExit()
-      } else if (e.key === ' ' && !(e.target instanceof HTMLInputElement)) {
+        return
+      }
+      // Form fields (e.g. the speed <select>) own their arrow/space keys.
+      const target = e.target
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLSelectElement ||
+        target instanceof HTMLTextAreaElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      ) {
+        return
+      }
+      if (e.key === ' ') {
+        // A focused button already activates itself on Space.
+        if (target instanceof HTMLButtonElement) return
         e.preventDefault()
         playback.toggle()
-      } else if (e.key === 'ArrowRight' && !(e.target instanceof HTMLInputElement)) {
+      } else if (e.key === 'ArrowRight') {
         e.preventDefault()
         playback.next()
-      } else if (e.key === 'ArrowLeft' && !(e.target instanceof HTMLInputElement)) {
+      } else if (e.key === 'ArrowLeft') {
         e.preventDefault()
         playback.previous()
       }
@@ -197,6 +211,8 @@ export function BinarySearch3DView({
               {event ? (
                 event.action === 'found' ? (
                   <span className="rounded bg-emerald-950/80 px-2 py-0.5 text-emerald-300 border border-emerald-500/50">✓ Encontrado</span>
+                ) : event.action === 'not_found' ? (
+                  <span className="rounded bg-rose-950/80 px-2 py-0.5 text-rose-200 border border-rose-500/50">✕ No encontrado</span>
                 ) : event.action === 'move_right' ? (
                   <span className="rounded bg-amber-950/80 px-2 py-0.5 text-amber-200 border border-amber-500/50">Mitad izq. descartada</span>
                 ) : (

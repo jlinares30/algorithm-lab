@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
+import type { RefObject } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import type { Mesh } from 'three'
 import type { SearchEvent } from '../../../execution/binarySearch'
@@ -29,27 +30,26 @@ function FloorRangeHighlight({
   spacing,
   before,
   after,
-  progress,
+  progressRef,
 }: {
   count: number
   spacing: number
   before: IndexRange
   after: IndexRange
-  progress: number
+  progressRef: RefObject<number>
 }) {
   const meshRef = useRef<Mesh>(null)
   const isInitialized = useRef(false)
 
-  const t = smoothstep(0.75, 1.0, progress)
-  const curLeft = before.left + (after.left - before.left) * t
-  const curRight = before.right + (after.right - before.right) * t
-
-  const targetX = ((curLeft + curRight) / 2 - (count - 1) / 2) * spacing
-  const targetWidth = Math.max(0.1, (curRight - curLeft + 1) * spacing)
-
   useFrame((_, delta) => {
     const mesh = meshRef.current
     if (!mesh) return
+
+    const t = smoothstep(0.75, 1.0, progressRef.current)
+    const curLeft = before.left + (after.left - before.left) * t
+    const curRight = before.right + (after.right - before.right) * t
+    const targetX = ((curLeft + curRight) / 2 - (count - 1) / 2) * spacing
+    const targetWidth = Math.max(0.1, (curRight - curLeft + 1) * spacing)
 
     if (!isInitialized.current) {
       mesh.position.set(targetX, 0.02, 0)
@@ -101,19 +101,19 @@ function SceneContent({
 
   const isInstanced = count > 64
 
-  // Track event changes so step advances start smoothly at progress 0 without flashing the previous step
-  const [prevEvent, setPrevEvent] = useState<SearchEvent | null>(event)
-  const [currentProgress, setCurrentProgress] = useState(event ? 0 : 1)
+  // Animation progress lives in a ref and is read inside useFrame, so playback
+  // ticks never re-render the React tree. A new step starts at 0 (no flash of
+  // the previous step); the initial state (no event) is fully settled.
+  const progressRef = useRef(event ? 0 : 1)
 
-  if (prevEvent !== event) {
-    setPrevEvent(event)
-    setCurrentProgress(event ? 0 : 1)
-  }
+  useLayoutEffect(() => {
+    progressRef.current = event ? 0 : 1
+  }, [event])
 
   useEffect(() => {
     if (!clock) return
     return clock.subscribe((p) => {
-      setCurrentProgress(p)
+      progressRef.current = p
     })
   }, [clock, revision])
 
@@ -150,7 +150,7 @@ function SceneContent({
           spacing={spacing}
           before={before}
           after={after}
-          progress={currentProgress}
+          progressRef={progressRef}
         />
       )}
 
@@ -161,7 +161,7 @@ function SceneContent({
           event={event}
           before={before}
           after={after}
-          progress={currentProgress}
+          progressRef={progressRef}
           selectedIndex={selectedIndex}
           minVal={minVal}
           maxVal={maxVal}
@@ -183,7 +183,7 @@ function SceneContent({
                 event={event}
                 before={before}
                 after={after}
-                progress={currentProgress}
+                progressRef={progressRef}
                 isSelected={selectedIndex === item.index}
                 showLabel={count <= 32}
                 onClick={onSelect}
@@ -198,7 +198,7 @@ function SceneContent({
         count={count}
         before={before}
         after={after}
-        progress={currentProgress}
+        progressRef={progressRef}
         spacing={spacing}
         resetTrigger={resetCamTrigger}
       />
