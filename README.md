@@ -146,10 +146,17 @@ Pulsa **⛶ Modo Inmersivo 3D** en la cabecera del visualizador para acceder a l
 
 ```text
 src/
-  App.tsx               # Composición de la aplicación
-  App.test.tsx          # Pruebas de la página inicial
-  pages/HomePage.tsx    # Página de inicio
-  components/           # Controles, línea de tiempo, vista del array y herramientas de entrada
+  App.tsx               # Enrutado por hash entre catálogo y laboratorios
+  App.test.tsx          # Pruebas del catálogo y la navegación
+  catalog/
+    algorithms.ts       # Metadatos de cada algoritmo (categoría, complejidad, estado)
+    labs.ts             # Laboratorio interactivo de cada algoritmo disponible (carga diferida)
+  navigation/
+    useHashRoute.ts     # Rutas `#/` y `#/algoritmo/<id>` sin dependencias
+  pages/
+    HomePage.tsx        # Catálogo agrupado por categoría
+    AlgorithmPage.tsx   # Página de un algoritmo: complejidad y laboratorio
+  components/           # Tarjetas, controles, línea de tiempo, vista del array y herramientas de entrada
   animations/           # Geometría de cámara, timeline GSAP y adaptador React
   playback/             # Contrato del reloj de animación, independiente de GSAP y WebGL
   execution/            # Protocolo, cliente del worker y ejecución Pyodide
@@ -182,6 +189,15 @@ AGENTS.md               # Reglas de colaboración y arquitectura
 
 Binary Search ya ejecuta Python en el navegador mediante Pyodide y un Web Worker.
 Los próximos algoritmos se incorporarán conforme se desarrollen manualmente.
+
+La portada muestra un catálogo con todos los algoritmos; los que aún no tienen
+laboratorio aparecen como «Próximamente». Para habilitar uno nuevo:
+
+1. Escribir su implementación en `python/algorithms/<categoría>/` con sus pruebas en `python/tests`.
+2. Crear su laboratorio en `src/visualizers/<id>/`.
+3. Registrarlo en `src/catalog/labs.ts` y cambiar su `status` a `'available'` en `src/catalog/algorithms.ts`.
+
+Cada laboratorio se carga solo al abrirlo, así la portada no descarga Three.js ni GSAP.
 
 Los componentes visuales reciben datos y callbacks mediante props. El estado del
 algoritmo y la lógica de reproducción son independientes de GSAP.

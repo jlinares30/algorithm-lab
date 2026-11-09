@@ -1,6 +1,10 @@
-import { BinarySearchLab } from '../visualizers/binary-search/BinarySearchLab'
+import { algorithms, algorithmsIn, categories } from '../catalog/algorithms'
+import { AlgorithmCard } from '../components/AlgorithmCard'
 
 export function HomePage() {
+  const availableCount = algorithms.filter((algorithm) => algorithm.status === 'available').length
+  const plannedCount = algorithms.length - availableCount
+
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-16 text-slate-100 sm:py-24">
       <div className="mx-auto max-w-5xl">
@@ -14,7 +18,35 @@ export function HomePage() {
           Un laboratorio interactivo para aprender algoritmos: escribe tu lógica
           en Python y explora cómo funciona, paso a paso.
         </p>
-        <BinarySearchLab />
+        <p className="mt-4 font-mono text-xs text-slate-400">
+          {availableCount} {availableCount === 1 ? 'disponible' : 'disponibles'} · {plannedCount} en preparación
+        </p>
+
+        {categories.map((category) => {
+          const items = algorithmsIn(category.id)
+          if (items.length === 0) return null
+          return (
+            <section
+              key={category.id}
+              aria-labelledby={`category-${category.id}`}
+              className="mt-14"
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-800 pb-3">
+                <h2 id={`category-${category.id}`} className="text-2xl font-semibold">
+                  {category.label}
+                </h2>
+                <p className="text-sm text-slate-400">{category.description}</p>
+              </div>
+              <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {items.map((algorithm) => (
+                  <li key={algorithm.id}>
+                    <AlgorithmCard algorithm={algorithm} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )
+        })}
       </div>
     </main>
   )
