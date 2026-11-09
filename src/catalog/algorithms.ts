@@ -54,7 +54,7 @@ export const algorithms: AlgorithmInfo[] = [
     summary: 'Recorre la colección elemento por elemento hasta encontrar el objetivo.',
     complexity: { best: 'O(1)', average: 'O(n)', worst: 'O(n)', space: 'O(1)' },
     pythonFile: 'python/algorithms/searching/linear_search.py',
-    status: 'planned',
+    status: 'available',
   },
   {
     id: 'bubble-sort',

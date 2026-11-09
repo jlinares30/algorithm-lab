@@ -1,3 +1,6 @@
+import { runPythonAlgorithm } from './pythonWorker'
+import type { PythonExecution } from './pythonWorker'
+
 export type SearchAction = 'move_left' | 'move_right' | 'found' | 'not_found'
 
 export interface SearchEvent {
@@ -11,15 +14,6 @@ export interface SearchResult {
   index: number
   events: SearchEvent[]
 }
-
-export interface SearchRequest {
-  numbers: number[]
-  target: number
-}
-
-export type SearchResponse =
-  | { ok: true; result: SearchResult }
-  | { ok: false; error: string }
 
 // JSON is the boundary between Python and the application; no PyProxy escapes.
 export function decodeSearchResult(json: string): SearchResult {
@@ -41,42 +35,8 @@ export function decodeSearchResult(json: string): SearchResult {
   return { index, events }
 }
 
-export interface SearchExecution {
-  result: Promise<SearchResult>
-  dispose: () => void
-}
+export type SearchExecution = PythonExecution<SearchResult>
 
 export function executeBinarySearch(numbers: number[], target: number): SearchExecution {
-  const worker = new Worker(new URL('./python.worker.ts', import.meta.url), { type: 'module' })
-  let rejectPending: (error: Error) => void
-  let settled = false
-  const result = new Promise<SearchResult>((resolve, reject) => {
-    rejectPending = reject
-    worker.onmessage = (event: MessageEvent<SearchResponse>) => {
-      settled = true
-      worker.terminate()
-      const response = event.data
-      if ('error' in response) {
-        reject(new Error(response.error))
-      } else {
-        resolve(response.result)
-      }
-    }
-    worker.onerror = () => {
-      settled = true
-      worker.terminate()
-      reject(new Error('No se pudo iniciar Python. Comprueba tu conexión e inténtalo de nuevo.'))
-    }
-    worker.postMessage({ numbers, target } satisfies SearchRequest)
-  })
-  return {
-    result,
-    dispose: () => {
-      worker.terminate()
-      if (!settled) {
-        settled = true
-        rejectPending(new Error('Ejecución cancelada.'))
-      }
-    },
-  }
+  return runPythonAlgorithm({ algorithm: 'binary_search', numbers, target }, decodeSearchResult)
 }

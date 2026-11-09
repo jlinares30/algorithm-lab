@@ -9,4 +9,9 @@ export const labs: Record<string, LazyExoticComponent<ComponentType>> = {
       default: module.BinarySearchLab,
     }))
   ),
+  'linear-search': lazy(() =>
+    import('../visualizers/linear-search/LinearSearchLab').then((module) => ({
+      default: module.LinearSearchLab,
+    }))
+  ),
 }

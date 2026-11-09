@@ -7,7 +7,7 @@ import { executeBinarySearch } from '../../execution/binarySearch'
 import type { SearchExecution, SearchResult } from '../../execution/binarySearch'
 import { BinarySearchVisualizer } from './BinarySearchVisualizer'
 import { parseSearchInput } from './model'
-import { usePlayback } from './usePlayback'
+import { usePlayback } from '../../playback/usePlayback'
 import { BinarySearch3DView } from './3d/BinarySearch3DView'
 
 interface Run extends SearchResult {

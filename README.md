@@ -158,13 +158,21 @@ src/
     AlgorithmPage.tsx   # Página de un algoritmo: complejidad y laboratorio
   components/           # Tarjetas, controles, línea de tiempo, vista del array y herramientas de entrada
   animations/           # Geometría de cámara, timeline GSAP y adaptador React
-  playback/             # Contrato del reloj de animación, independiente de GSAP y WebGL
-  execution/            # Protocolo, cliente del worker y ejecución Pyodide
+  playback/             # usePlayback y contrato del reloj de animación, independientes de GSAP y WebGL
+  input/                # Validación compartida de listas y objetivos
+  execution/
+    python.worker.ts    # Worker Pyodide que ejecuta el archivo Python de cada algoritmo
+    pythonWorker.ts     # Protocolo y cliente del worker
+    binarySearch.ts     # Eventos y decodificador de binary_search
+    linearSearch.ts     # Contrato (índice, steps) y decodificador de linear_search
   visualizers/
+    linear-search/
+      LinearSearchLab.tsx        # Laboratorio: entrada, ejecución y reproducción
+      LinearSearchVisualizer.tsx # Escenario 2D con el puntero i
+      model.ts                   # Proyecciones inmutables de los pasos
     binary-search/
       BinarySearchLab.tsx        # Laboratorio principal con modos de entrada y pestañas
       BinarySearchVisualizer.tsx # Escenario visual 2D
-      usePlayback.ts             # Motor de control temporal y reproducción continua
       model.ts                   # Proyecciones inmutables de eventos y rangos
       3d/
         BinarySearch3DView.tsx   # Vista inmersiva a pantalla completa y HUD flotante

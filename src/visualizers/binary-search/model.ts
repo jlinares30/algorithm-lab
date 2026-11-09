@@ -1,20 +1,9 @@
 import type { SearchEvent } from '../../execution/binarySearch'
+import { parseNumberList, parseTarget } from '../../input/parseNumbers'
 
 export function parseSearchInput(list: string, targetText: string) {
-  const parts = list.trim() === '' ? [] : list.trim().split(/\s*[,;]\s*|\s+/)
-  const integer = /^[+-]?\d+$/
-  if (parts.some((part) => !integer.test(part) || !Number.isSafeInteger(Number(part)))) {
-    throw new Error('La lista debe contener enteros seguros separados por comas o espacios.')
-  }
-  const numbers = parts.map(Number)
-  if (numbers.length > 256) throw new Error('Introduce como máximo 256 números.')
-  if (numbers.some((number, index) => index > 0 && number < numbers[index - 1])) {
-    throw new Error('La lista debe estar ordenada de menor a mayor. Se permiten repetidos.')
-  }
-  if (!integer.test(targetText.trim()) || !Number.isSafeInteger(Number(targetText))) {
-    throw new Error('El objetivo debe ser un entero seguro.')
-  }
-  return { numbers, target: Number(targetText) }
+  const numbers = parseNumberList(list, { requireSorted: true })
+  return { numbers, target: parseTarget(targetText) }
 }
 
 export function explainEvent(event: SearchEvent, numbers: number[], target: number) {

@@ -29,8 +29,9 @@ describe('Página inicial', () => {
     const searching = screen.getByRole('region', { name: 'Búsqueda' })
     const sorting = screen.getByRole('region', { name: 'Ordenamiento' })
     expect(within(searching).getByRole('link', { name: 'Abrir Binary Search' })).toBeDefined()
+    expect(within(searching).getByRole('link', { name: 'Abrir Linear Search' })).toBeDefined()
     expect(within(sorting).getByRole('article', { name: /Merge Sort \(próximamente\)/ })).toBeDefined()
-    expect(screen.getByText(/1 disponible · \d+ en preparación/)).toBeDefined()
+    expect(screen.getByText(/2 disponibles · \d+ en preparación/)).toBeDefined()
   })
 
   it('no carga ningún laboratorio en la portada', () => {
@@ -59,6 +60,15 @@ describe('Navegación entre algoritmos', () => {
     navigate(screen.getByRole('link', { name: /Todos los algoritmos/ }).getAttribute('href') ?? '')
     expect(screen.getByRole('region', { name: 'Búsqueda' })).toBeDefined()
     expect(document.title).toBe('Algorithm Lab')
+  }, 15000)
+
+  it('abre el laboratorio de Linear Search por su ruta', async () => {
+    window.location.hash = '#/algoritmo/linear-search'
+    render(<App />)
+
+    const lab = await screen.findByRole('region', { name: 'Linear Search' }, { timeout: 10000 })
+    expect(lab.textContent).toContain('No necesita que esté ordenada')
+    expect(screen.getByLabelText('Lista de números')).toBeDefined()
   }, 15000)
 
   it('indica cuándo un algoritmo aún está en preparación', () => {

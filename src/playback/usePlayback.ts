@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { AnimationClock } from '../../playback/animationClock'
+import type { AnimationClock } from './animationClock'
 
 export function usePlayback(total: number) {
   // Position 0 is the input, before any Python event has been consumed.
