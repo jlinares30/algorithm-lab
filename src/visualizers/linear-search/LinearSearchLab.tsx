@@ -210,6 +210,7 @@ export function LinearSearchLab() {
             view={view}
             speed={playback.speed}
             preview={prediction.enabled && !prediction.feedback ? preview : null}
+            focus={prediction.enabled && !prediction.feedback ? question?.focus : null}
           />
           {prediction.enabled ? (
             <PredictionPanel

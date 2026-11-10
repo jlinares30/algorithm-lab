@@ -81,6 +81,7 @@ export function getLinearPrediction(numbers: number[], target: number, event: Li
     prompt: event.index === null
       ? `Ya no quedan elementos por revisar. El objetivo es ${target}. ¿Qué hace el algoritmo?`
       : `El puntero i llega al índice ${event.index} (valor ${numbers[event.index]}). El objetivo es ${target}. ¿Qué hace el algoritmo?`,
+    focus: event.index === null ? undefined : { pointer: 'i', index: event.index },
     options: linearPredictionOptions(numbers.length, event),
     answer: event.action,
   }

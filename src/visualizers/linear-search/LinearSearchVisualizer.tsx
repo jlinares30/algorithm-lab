@@ -4,7 +4,7 @@ import { ArrayVisualization } from '../../components/ArrayVisualization'
 import type { ArrayView } from '../../components/ArrayVisualization'
 import { ArrayOverview } from '../../components/ArrayOverview'
 import type { LinearSearchEvent } from '../../execution/linearSearch'
-import type { PredictionPreview } from '../../prediction/usePrediction'
+import type { PredictionFocus, PredictionPreview } from '../../prediction/usePrediction'
 import { explainLinearEvent, getLinearSnapshot } from './model'
 
 interface Props {
@@ -15,12 +15,20 @@ interface Props {
   view: ArrayView
   speed: number
   preview?: PredictionPreview | null
+  focus?: PredictionFocus | null
 }
 
-export function LinearSearchVisualizer({ numbers, target, events, position, view, speed, preview }: Props) {
+export function LinearSearchVisualizer({ numbers, target, events, position, view, speed, preview, focus }: Props) {
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null)
   const snapshot = useMemo(() => getLinearSnapshot(numbers, events, position), [numbers, events, position])
-  const { event, current, comparisons, items } = snapshot
+  const { event, current, comparisons } = snapshot
+  // While a question points at the next element, the one just compared is
+  // already settled: the recorded step says it did not match.
+  const items = focus && event?.action === 'check'
+    ? snapshot.items.map((item) => item.index === current
+      ? { ...item, state: 'discarded' as const, label: `Índice ${item.index}: ${item.value}, revisado` }
+      : item)
+    : snapshot.items
 
   const progress = Math.round((position / Math.max(1, events.length)) * 100)
   const comparison = current !== null
@@ -85,6 +93,7 @@ export function LinearSearchVisualizer({ numbers, target, events, position, view
         dense={numbers.length > 40}
         selectedItemIndex={selectedItemIndex}
         preview={preview}
+        focus={focus}
         onSelectItem={(index) => setSelectedItemIndex(selectedItemIndex === index ? null : index)}
       />
 

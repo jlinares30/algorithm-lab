@@ -165,6 +165,25 @@ body {
   background: #0f172a;
 }
 
+/* Where the pointer of a pending prediction question will land */
+.array-focus {
+  position: absolute;
+  z-index: 5;
+  transform: translateX(-50%);
+  color: #fbbf24;
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.array-focus > span:first-child {
+  display: block;
+  border: 1px dashed currentColor;
+  border-radius: 0.3rem;
+  padding: 0.1rem 0.35rem;
+  background: #0f172a;
+}
+
 .array-pointer[data-pointer=mid] { color: #fbbf24; }
 .array-pointer[data-pointer=right] { color: #c4b5fd; }
 .array-stage { position: relative; height: 280px; transition: height var(--step-duration) ease; }
@@ -229,6 +248,7 @@ body {
 .array-item[data-state=mid] .array-glyph { border-color: #fbbf24; background-color: #92400e; color: #fef3c7; transform: translateY(-4px) scaleX(1.08); }
 .array-item[data-state=found] .array-glyph { border-color: #34d399; background-color: #065f46; color: #d1fae5; transform: translateY(-4px) scaleX(1.08); }
 .array-item[data-state=discarded] .array-glyph { border-color: #475569; background-color: #334155; opacity: 0.3; transform: translateY(12px) scaleX(0.82); }
+.array-item[data-focus=true] .array-glyph { outline: 2px dashed #fbbf24; outline-offset: 3px; opacity: 1; }
 /* Tentative outcome while hovering a prediction option */
 .array-item[data-preview=discard] .array-glyph { border-color: #f87171; background-color: #7f1d1d; background-image: none; color: #fecaca; opacity: 0.9; }
 .array-item[data-preview=found] .array-glyph { border-color: #34d399; background-color: #065f46; background-image: none; color: #d1fae5; opacity: 1; }

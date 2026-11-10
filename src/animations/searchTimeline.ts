@@ -116,21 +116,15 @@ export function buildSearchTimeline(root: HTMLElement, scene: SceneGeometry) {
           timeline.fromTo(
             boundaryPointer,
             { left: `${startPct}%` },
-            {
-              left: `${targetPct}%`,
-              duration: 0.3,
-              ease: 'power2.inOut',
-              onUpdate: function () {
-                if (boundaryVal) {
-                  const current = this.progress() >= 0.5 ? targetIdx : startIdx
-                  if (boundaryVal.textContent !== `${current}`) {
-                    boundaryVal.textContent = `${current}`
-                  }
-                }
-              },
-            },
+            { left: `${targetPct}%`, duration: 0.3, ease: 'power2.inOut' },
             0.7
           )
+          // The label switches halfway through the move. A zero-duration tween
+          // (not a callback) so it also applies when the clock scrubs the
+          // timeline with events suppressed, and reverts when scrubbing back.
+          if (boundaryVal) {
+            timeline.set(boundaryVal, { textContent: `${targetIdx}` }, 0.85)
+          }
         }
       }
 

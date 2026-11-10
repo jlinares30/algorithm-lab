@@ -14,9 +14,17 @@ export interface PredictionOption {
   preview?: PredictionPreview
 }
 
+/** The element a question is about, shown on the array with the pointer that will land on it. */
+export interface PredictionFocus {
+  /** Pointer name as drawn on the array ("mid", "i"). */
+  pointer: string
+  index: number
+}
+
 /** A question about the step that is about to be revealed. */
 export interface PredictionQuestion {
   prompt: string
+  focus?: PredictionFocus
   options: PredictionOption[]
   /** Id of the option matching what the recorded Python step actually did. */
   answer: string

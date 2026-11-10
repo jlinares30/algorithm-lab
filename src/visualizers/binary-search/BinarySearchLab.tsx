@@ -327,6 +327,7 @@ export function BinarySearchLab() {
             clock={playback.clock}
             revision={playback.revision}
             preview={prediction.enabled && !prediction.feedback ? preview : null}
+            focus={prediction.enabled && !prediction.feedback ? question?.focus : null}
             // The 3D view shows the full timeline, which would reveal the answers.
             onToggleImmersive={prediction.enabled ? undefined : () => setIsImmersive3D(true)}
           />

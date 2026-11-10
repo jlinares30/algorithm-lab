@@ -111,6 +111,7 @@ export function getSearchPrediction(numbers: number[], target: number, event: Se
     prompt: event.mid === null
       ? `El rango queda en ${range}. El objetivo es ${target}. ¿Qué hace el algoritmo?`
       : `Con ${range}, mid es el índice ${event.mid} (valor ${numbers[event.mid]}). El objetivo es ${target}. ¿Qué hace el algoritmo?`,
+    focus: event.mid === null ? undefined : { pointer: 'mid', index: event.mid },
     options: searchPredictionOptions(event),
     answer: event.action,
   }

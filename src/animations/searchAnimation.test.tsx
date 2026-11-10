@@ -62,6 +62,8 @@ describe('Sincronización GSAP con el reloj de reproducción', () => {
     expect(scene.dataset.phase).toBe('discard')
     // A 0.44 (fase de descarte), el puntero left debe seguir en el índice 0 y no haber saltado al 6
     expect(parseFloat(leftPointer.style.left)).toBeCloseTo(4.55, 1)
+    const leftLabel = leftPointer.querySelector('b')!
+    expect(leftLabel.textContent).toBe('0')
 
     harness.emit(0.55)
     expect(scene.dataset.phase).toBe('discard')
@@ -78,6 +80,11 @@ describe('Sincronización GSAP con el reloj de reproducción', () => {
     expect(scene.dataset.phase).toBe('complete')
     expect(camera.style.width).toBe('220%')
     expect(parseFloat(leftPointer.style.left)).toBeCloseTo(59.09, 1)
+    // La etiqueta acompaña al puntero: el nuevo left es 6, el del siguiente evento de Python.
+    expect(leftLabel.textContent).toBe('6')
+    // Y vuelve a su valor al retroceder dentro del mismo paso.
+    harness.emit(0.5)
+    expect(leftLabel.textContent).toBe('0')
   })
 
   it('reconstruye saltos, retrocesos y cambios de vista, liberando las suscripciones anteriores', () => {
@@ -137,7 +144,8 @@ describe('Sincronización GSAP con el reloj de reproducción', () => {
     const timelines = gsap.globalTimeline.getChildren(false, false, true).filter((timeline) => timeline.data === 'algorithm-lab-step')
     expect(timelines).toHaveLength(1)
     const tweens = (timelines[0] as gsap.core.Timeline).getChildren(false, true, false) as gsap.core.Tween[]
-    expect(tweens.length).toBeLessThanOrEqual(14)
+    // Fixed number of tweens regardless of array size (one of them updates the boundary label).
+    expect(tweens.length).toBeLessThanOrEqual(15)
     expect(tweens.every((tween) => tween.targets().length <= 3)).toBe(true)
   })
 })

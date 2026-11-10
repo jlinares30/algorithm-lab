@@ -124,4 +124,20 @@ describe('Modo predicción en Linear Search', () => {
     expect(screen.queryByRole('region', { name: 'Modo predicción' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Avanzar' })).toBeDefined()
   })
+
+  it('lleva el puntero i al elemento por el que se pregunta', async () => {
+    const panel = await startPrediction()
+    const marker = () => document.querySelector('.array-focus')?.textContent
+
+    expect(marker()).toContain('i 0')
+    fireEvent.click(panel.getByRole('button', { name: 'No coincide: avanzar al siguiente' }))
+    expect(document.querySelector('.array-focus')).toBeNull()
+    expect(screen.getByLabelText('Índice 0: 42, comparando')).toBeDefined()
+
+    // En la siguiente pregunta, el elemento anterior ya figura como revisado.
+    fireEvent.click(panel.getByRole('button', { name: 'Siguiente pregunta' }))
+    expect(marker()).toContain('i 1')
+    expect(screen.getByLabelText('Índice 0: 42, revisado')).toBeDefined()
+    expect(document.querySelector('.array-item[data-focus=true]')?.getAttribute('aria-label')).toContain('Índice 1: 7')
+  })
 })

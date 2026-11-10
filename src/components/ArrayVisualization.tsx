@@ -25,9 +25,14 @@ interface Props {
   onSelectItem?: (index: number) => void
   /** Marks an index range as a tentative outcome, without changing any item state. */
   preview?: { kind: 'discard' | 'found'; from: number; to: number } | null
+  /**
+   * The element a pending question is about. Its pointer is drawn there as a
+   * dashed marker, replacing the pointer of the same name from the last step.
+   */
+  focus?: { pointer: string; index: number } | null
 }
 
-export function ArrayVisualization({ items, view, target, pointers, range, dense, selectedItemIndex, onSelectItem, preview }: Props) {
+export function ArrayVisualization({ items, view, target, pointers, range, dense, selectedItemIndex, onSelectItem, preview, focus }: Props) {
   const values = items.map((item) => item.value)
   const lower = Math.min(0, target, ...values)
   const upper = Math.max(0, target, ...values)
@@ -48,11 +53,24 @@ export function ArrayVisualization({ items, view, target, pointers, range, dense
       <div className="array-canvas" data-view={view} style={{ width: '100%' }}>
         <div className="array-pointer-tracks" aria-hidden="true">
           {pointers.map((pointer, row) => (
-            <div key={pointer.label} className="array-pointer" data-pointer={pointer.label} data-visible={pointer.index !== null && pointer.index >= 0 && pointer.index < items.length} style={{ left: `${((Math.max(0, Math.min(items.length - 1, pointer.index ?? 0)) + 0.5) / Math.max(1, items.length)) * 100}%`, top: `${row * 28}px`, opacity: pointer.index !== null && pointer.index >= 0 && pointer.index < items.length ? 1 : 0 }}>
+            <div key={pointer.label} className="array-pointer" data-pointer={pointer.label} data-visible={pointer.index !== null && pointer.index >= 0 && pointer.index < items.length} style={{ left: `${((Math.max(0, Math.min(items.length - 1, pointer.index ?? 0)) + 0.5) / Math.max(1, items.length)) * 100}%`, top: `${row * 28}px`, opacity: pointer.index !== null && pointer.index >= 0 && pointer.index < items.length ? 1 : 0, visibility: focus?.pointer === pointer.label ? 'hidden' : undefined }}>
               <span>{pointer.label} <b>{pointer.index ?? '—'}</b></span>
               <span className="block text-center leading-3">↓</span>
             </div>
           ))}
+          {focus && (
+            <div
+              className="array-focus"
+              data-pointer={focus.pointer}
+              style={{
+                left: `${((focus.index + 0.5) / Math.max(1, items.length)) * 100}%`,
+                top: `${Math.max(0, pointers.findIndex((pointer) => pointer.label === focus.pointer)) * 28}px`,
+              }}
+            >
+              <span>{focus.pointer} <b>{focus.index}</b> ?</span>
+              <span className="block text-center leading-3">↓</span>
+            </div>
+          )}
         </div>
         <div className="array-stage">
           <div className="array-range" aria-hidden="true" style={{ left: `${((range?.left ?? 0) / Math.max(1, items.length)) * 100}%`, width: `${(active / Math.max(1, items.length)) * 100}%`, opacity: active > 0 ? 1 : 0 }} />
@@ -77,6 +95,7 @@ export function ArrayVisualization({ items, view, target, pointers, range, dense
                         data-state={item.state}
                         data-pending={item.pending}
                         data-selected={isSelected}
+                        data-focus={focus?.index === item.index ? true : undefined}
                         data-preview={preview && item.index >= preview.from && item.index <= preview.to ? preview.kind : undefined}
                         title={item.pending ? 'Esta secuencia descarta este elemento tras mostrar la comparación.' : `${item.label} (Clic para inspeccionar)`}
                         onClick={() => onSelectItem?.(item.index)}

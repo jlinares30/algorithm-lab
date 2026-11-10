@@ -317,4 +317,25 @@ describe('Modo predicción en Binary Search', () => {
     fireEvent.click(panel.getByRole('button', { name: 'Encontrado: mid es el objetivo' }))
     expect(document.querySelector('.array-item[data-preview]')).toBeNull()
   })
+
+  it('señala en el arreglo el mid por el que se pregunta y lo retira al responder', async () => {
+    await start()
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Modo predicción' }))
+    const panel = within(screen.getByRole('region', { name: 'Modo predicción' }))
+    const marker = () => document.querySelector('.array-focus')?.textContent
+    const focused = () => document.querySelector('.array-item[data-focus=true]')?.getAttribute('aria-label')
+
+    // Pregunta 1: mid es el índice 5.
+    expect(marker()).toContain('mid 5')
+    expect(focused()).toContain('Índice 5: 27')
+
+    // Durante la respuesta se muestra el paso real, sin marcador.
+    fireEvent.click(panel.getByRole('button', { name: 'Descartar la mitad izquierda' }))
+    expect(document.querySelector('.array-focus')).toBeNull()
+
+    // Pregunta 2: mid es el índice 8.
+    fireEvent.click(panel.getByRole('button', { name: 'Siguiente pregunta' }))
+    expect(marker()).toContain('mid 8')
+    expect(focused()).toContain('Índice 8: 56')
+  })
 })
