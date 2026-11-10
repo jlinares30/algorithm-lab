@@ -1,6 +1,5 @@
-def linear_search(numbers: list[int], target: int, steps = None) -> tuple[int, list[dict]]:
-    if steps is None:
-        steps = []
+def linear_search(numbers: list[int], target: int) -> tuple[int, list[dict]]:
+    steps = []
     for index, value in enumerate(numbers):
         if target == value:
             steps.append({
@@ -8,7 +7,7 @@ def linear_search(numbers: list[int], target: int, steps = None) -> tuple[int, l
                 "current": value,
                 "index": index
             })
-            return index, steps;
+            return index, steps
         steps.append({
             "action": "check",
             "current": value,
@@ -19,7 +18,7 @@ def linear_search(numbers: list[int], target: int, steps = None) -> tuple[int, l
         "current": None,
         "index": None
     })
-    return -1, steps;
+    return -1, steps
 
 array = [3,6,7,10,8]
 
