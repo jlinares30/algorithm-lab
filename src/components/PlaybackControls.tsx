@@ -10,24 +10,34 @@ interface Props {
   onSpeedChange: (speed: number) => void
 }
 
+// Icon-only transport: names live in aria-label/title so the row stays quiet.
 export function PlaybackControls(props: Props) {
   return (
-    <div className="flex flex-wrap items-center gap-3 border-t border-slate-800 pt-6">
-      <button className="control" onClick={props.onPrevious} disabled={props.position === 0}>Retroceder</button>
-      <button className="control control-primary" onClick={props.onToggle} disabled={props.total === 0}>
-        {props.playing ? 'Pausar' : 'Reproducir'}
+    <div className="flex flex-wrap items-center justify-center gap-2">
+      <button className="control control-icon" aria-label="Reiniciar" title="Reiniciar" onClick={props.onReset} disabled={props.position === 0 && !props.playing}>⏮</button>
+      <button className="control control-icon" aria-label="Retroceder" title="Retroceder" onClick={props.onPrevious} disabled={props.position === 0}>◀</button>
+      <button
+        className="control control-primary control-icon"
+        aria-label={props.playing ? 'Pausar' : 'Reproducir'}
+        title={props.playing ? 'Pausar' : 'Reproducir'}
+        onClick={props.onToggle}
+        disabled={props.total === 0}
+      >
+        {props.playing ? '⏸' : '▶'}
       </button>
-      <button className="control" onClick={props.onNext} disabled={props.position === props.total}>Avanzar</button>
-      <button className="control" onClick={props.onReset} disabled={props.position === 0 && !props.playing}>Reiniciar</button>
-      <label className="flex items-center gap-3 text-sm text-slate-300 sm:ml-auto">
-        Velocidad
-        <select className="field w-auto" value={props.speed} onChange={(event) => props.onSpeedChange(Number(event.target.value))}>
-          <option value={0.5}>0.5×</option>
-          <option value={1}>1×</option>
-          <option value={2}>2×</option>
-          <option value={4}>4×</option>
-        </select>
-      </label>
+      <button className="control control-icon" aria-label="Avanzar" title="Avanzar" onClick={props.onNext} disabled={props.position === props.total}>▶▏</button>
+      <select
+        className="field ml-2 w-auto"
+        aria-label="Velocidad"
+        title="Velocidad"
+        value={props.speed}
+        onChange={(event) => props.onSpeedChange(Number(event.target.value))}
+      >
+        <option value={0.5}>0.5×</option>
+        <option value={1}>1×</option>
+        <option value={2}>2×</option>
+        <option value={4}>4×</option>
+      </select>
     </div>
   )
 }

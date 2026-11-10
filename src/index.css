@@ -27,6 +27,10 @@ body {
   .control-primary {
     @apply border-emerald-400 bg-emerald-400 text-slate-950 hover:bg-emerald-300;
   }
+
+  .control-icon {
+    @apply min-w-11 px-3 text-center leading-none;
+  }
 }
 
 :where(button, input, textarea, select, [tabindex]):focus-visible {
@@ -56,8 +60,9 @@ body {
   gap: 0.5rem;
   border: 1px solid #475569;
   border-radius: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  color: #cbd5e1;
   cursor: pointer;
 }
 
@@ -79,14 +84,25 @@ body {
 }
 
 .timeline-step {
-  min-height: 2.75rem;
+  min-width: 2rem;
+  min-height: 2rem;
   border: 1px solid #334155;
   border-radius: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  color: #cbd5e1;
+  padding: 0.25rem 0.5rem;
+  color: #94a3b8;
+  font-family: ui-monospace, monospace;
   font-size: 0.75rem;
   cursor: pointer;
 }
+
+.step-details > summary {
+  width: fit-content;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.step-details > summary:hover { color: #e2e8f0; }
 
 .timeline-step:hover { background: #1e293b; }
 .timeline-step.is-current { border-color: #34d399; background: #34d39918; color: #a7f3d0; }
@@ -107,9 +123,10 @@ body {
 
 .comparison-badge {
   border: 1px solid #fbbf2460;
-  border-radius: 0.75rem;
-  padding: 0.7rem 1rem;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.75rem;
   font-family: ui-monospace, monospace;
+  font-size: 0.875rem;
   color: #fde68a;
   background: #fbbf240a;
   overflow-wrap: anywhere;

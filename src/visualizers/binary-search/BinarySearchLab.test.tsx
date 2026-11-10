@@ -157,6 +157,10 @@ describe('Visualización por eventos', () => {
 
   it('genera entradas ordenadas y permite elegir el objetivo sin alterar una ejecución cargada', async () => {
     await start()
+    // After a run the form is folded behind a one-line summary.
+    expect(screen.queryByRole('button', { name: 'Generar lista' })).toBeNull()
+    expect(screen.getByText(/11 elementos · objetivo/)).toBeDefined()
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar datos' }))
     fireEvent.change(screen.getByLabelText('Tamaño de la lista aleatoria'), { target: { value: '20' } })
     fireEvent.click(screen.getByRole('button', { name: 'Generar lista' }))
     const numbers = (screen.getByLabelText('Lista ordenada') as HTMLTextAreaElement).value.split(', ').map(Number)
@@ -186,6 +190,7 @@ describe('Visualización por eventos', () => {
       }),
       dispose: vi.fn(),
     })
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar datos' }))
     fireEvent.change(screen.getByLabelText('Tamaño de la lista aleatoria'), { target: { value: '256' } })
     fireEvent.click(screen.getByRole('button', { name: 'Generar lista' }))
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ejecutar búsqueda' })) })
@@ -269,7 +274,7 @@ describe('Modo predicción en Binary Search', () => {
     const panel = within(screen.getByRole('region', { name: 'Modo predicción' }))
 
     expect(screen.queryByRole('region', { name: 'Navegación entre eventos' })).toBeNull()
-    expect(screen.queryByRole('button', { name: /Modo Inmersivo 3D/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: /inmersivo/i })).toBeNull()
 
     expect(panel.getByText(/Con left=0, right=10, mid es el índice 5 \(valor 27\)\. El objetivo es 69/)).toBeDefined()
     fireEvent.click(panel.getByRole('button', { name: 'Descartar la mitad derecha' }))

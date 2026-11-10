@@ -33,22 +33,14 @@ function ComplexityStrip({ algorithm }: { algorithm: AlgorithmInfo }) {
     ['Espacio', algorithm.complexity.space],
   ]
   return (
-    <div className="mt-6 flex flex-wrap items-center gap-2 text-xs">
-      {category && (
-        <span className="rounded-full border border-slate-700 px-2.5 py-0.5 text-slate-300">
-          {category.label}
-        </span>
-      )}
-      {algorithm.requirement && (
-        <span className="rounded-full bg-amber-400/10 px-2.5 py-0.5 text-amber-200">
-          {algorithm.requirement}
-        </span>
-      )}
-      <dl aria-label="Complejidad" className="flex flex-wrap gap-2 font-mono">
+    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+      {category && <span>{category.label}</span>}
+      {algorithm.requirement && <span className="text-amber-200/80">{algorithm.requirement}</span>}
+      <dl aria-label="Complejidad" className="flex flex-wrap gap-x-4 gap-y-1 font-mono">
         {rows.map(([label, value]) => (
-          <div key={label} className="rounded bg-slate-900 px-2 py-0.5 text-slate-300">
-            <dt className="inline text-slate-500">{label} </dt>
-            <dd className="inline">{value}</dd>
+          <div key={label}>
+            <dt className="inline">{label} </dt>
+            <dd className="inline text-slate-300">{value}</dd>
           </div>
         ))}
       </dl>

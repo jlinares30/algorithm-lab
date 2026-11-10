@@ -5,25 +5,23 @@ interface Props {
   question: PredictionQuestion | null
   feedback: PredictionFeedback | null
   score: { correct: number; answered: number }
-  position: number
-  total: number
   onAnswer: (optionId: string) => void
   onContinue: () => void
   onRestart: () => void
 }
 
-export function PredictionPanel({ question, feedback, score, position, total, onAnswer, onContinue, onRestart }: Props) {
+export function PredictionPanel({ question, feedback, score, onAnswer, onContinue, onRestart }: Props) {
   const finished = !feedback && question === null
 
   return (
     <section
       aria-label="Modo predicción"
-      className="space-y-4 rounded-xl border border-emerald-400/30 bg-slate-950/50 p-4"
+      className="space-y-3 border-t border-slate-800 pt-4"
     >
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
         <h3 className="font-medium text-emerald-300">Modo predicción</h3>
         <p className="font-mono text-xs text-slate-400">
-          Paso {position} de {total} · Aciertos: <strong className="text-emerald-300">{score.correct}</strong> de {score.answered}
+          Aciertos: <strong className="text-emerald-300">{score.correct}</strong> de {score.answered}
         </p>
       </div>
 
@@ -50,7 +48,6 @@ export function PredictionPanel({ question, feedback, score, position, total, on
               </button>
             ))}
           </div>
-          <p className="text-xs text-slate-400">El paso se revela cuando eliges una respuesta.</p>
         </fieldset>
       )}
 

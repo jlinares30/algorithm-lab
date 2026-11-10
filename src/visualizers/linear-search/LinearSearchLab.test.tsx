@@ -35,7 +35,10 @@ describe('Laboratorio de Linear Search', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Ejecutar búsqueda' }))
 
     expect(executeLinearSearch).toHaveBeenCalledWith([42, 7, 19, 3], 19)
-    expect(await screen.findByText(/Todo está preparado/)).toBeDefined()
+    expect(await screen.findByText('0 de 3')).toBeDefined()
+    // The form folds into a summary once the run is loaded.
+    expect(screen.getByText(/4 elementos · objetivo/)).toBeDefined()
+    expect(screen.queryByRole('button', { name: 'Ejecutar búsqueda' })).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: 'Ir al paso 1: check [0]' }))
     expect(screen.getByText('42 ≠ 19. Se avanza al índice 1.')).toBeDefined()

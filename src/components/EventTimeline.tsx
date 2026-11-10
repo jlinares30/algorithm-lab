@@ -10,6 +10,9 @@ interface Props {
   onSeekContinuous?: (time: number) => void
 }
 
+/** Above this many steps the per-step buttons are dropped; the slider still reaches every step. */
+const maxStepButtons = 16
+
 export function EventTimeline({
   labels,
   position,
@@ -47,51 +50,45 @@ export function EventTimeline({
   }
 
   return (
-    <section
-      aria-label="Navegación entre eventos"
-      className="space-y-3 rounded-xl border border-slate-800 bg-slate-950/50 p-4"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-slate-300">
-        <label htmlFor={id} className="font-medium">
-          Línea de tiempo continua
-        </label>
-        <span className="font-mono text-xs text-slate-400">
-          Progreso: <strong className="text-emerald-300">{displayTime.toFixed(2)}</strong> / {total}
+    <section aria-label="Navegación entre eventos" className="space-y-2">
+      <div className="flex items-center gap-3">
+        <label htmlFor={id} className="sr-only">Línea de tiempo continua</label>
+        <input
+          id={id}
+          className="timeline-slider"
+          type="range"
+          min={0}
+          max={total}
+          step="any"
+          value={displayTime}
+          disabled={total === 0}
+          aria-label="Línea de tiempo continua"
+          aria-valuetext={`Paso ${position} de ${total}: ${labels[position] ?? 'Inicio'}`}
+          onChange={handleChange}
+        />
+        <span className="shrink-0 font-mono text-xs text-slate-400" title="Progreso de la animación">
+          <strong className="font-normal text-emerald-300">{displayTime.toFixed(2)}</strong> / {total}
         </span>
       </div>
 
-      <input
-        id={id}
-        className="timeline-slider"
-        type="range"
-        min={0}
-        max={total}
-        step="any"
-        value={displayTime}
-        disabled={total === 0}
-        aria-label="Línea de tiempo continua"
-        aria-valuetext={`Paso ${position} de ${total}: ${labels[position] ?? 'Inicio'}`}
-        onChange={handleChange}
-      />
-
-      <ol className="flex flex-wrap gap-2" aria-label="Pasos de la ejecución">
-        {labels.map((label, index) => (
-          <li key={index}>
-            <button
-              type="button"
-              className={`timeline-step ${position === index ? 'is-current' : ''}`}
-              aria-label={`Ir al paso ${index}: ${label}`}
-              aria-current={position === index ? 'step' : undefined}
-              onClick={() => onSeek(index)}
-            >
-              <span className="font-mono">{index.toString().padStart(2, '0')}</span> · {label}
-            </button>
-          </li>
-        ))}
-      </ol>
-      <p className="text-xs text-slate-400">
-        Arrastra la barra para navegar de forma continua por cualquier instante de la animación. Los botones permiten saltos directos.
-      </p>
+      {labels.length <= maxStepButtons + 1 && (
+        <ol className="flex flex-wrap justify-center gap-1.5" aria-label="Pasos de la ejecución">
+          {labels.map((label, index) => (
+            <li key={index}>
+              <button
+                type="button"
+                className={`timeline-step ${position === index ? 'is-current' : ''}`}
+                aria-label={`Ir al paso ${index}: ${label}`}
+                aria-current={position === index ? 'step' : undefined}
+                title={`${index} · ${label}`}
+                onClick={() => onSeek(index)}
+              >
+                {index}
+              </button>
+            </li>
+          ))}
+        </ol>
+      )}
     </section>
   )
 }

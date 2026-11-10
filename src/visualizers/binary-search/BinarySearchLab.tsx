@@ -26,6 +26,7 @@ export function BinarySearchLab() {
   const [expandedManual, setExpandedManual] = useState(false)
   const [generatedSize, setGeneratedSize] = useState(11)
   const [run, setRun] = useState<Run | null>(null)
+  const [formOpen, setFormOpen] = useState(true)
   const [isImmersive3D, setIsImmersive3D] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -60,7 +61,10 @@ export function BinarySearchLab() {
       current = executeBinarySearch(input.numbers, input.target)
       execution.current = current
       const result = await current.result
-      if (execution.current === current) setRun({ ...input, ...result })
+      if (execution.current === current) {
+        setRun({ ...input, ...result })
+        setFormOpen(false)
+      }
     } catch (error) {
       if (execution.current === current) setError(error instanceof Error ? error.message : String(error))
     } finally {
@@ -106,14 +110,21 @@ export function BinarySearchLab() {
 
   return (
     <section aria-labelledby="binary-search-title" className="mt-12 rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 id="binary-search-title" className="text-2xl font-semibold">Binary Search</h2>
-        <span className="rounded-full bg-emerald-400/10 px-3 py-1 font-mono text-xs text-emerald-300">Python · Pyodide · Web Worker</span>
-      </div>
-      <p className="mt-3 text-slate-400">Explora la búsqueda binaria, una decisión a la vez.</p>
+      <h2 id="binary-search-title" className="text-2xl font-semibold">Binary Search</h2>
 
-      {/* Redesigned Compact Input Panel */}
-      <form onSubmit={submit} className="my-8 rounded-xl border border-slate-800 bg-slate-950/80 p-4 sm:p-5 space-y-4" aria-busy={loading}>
+      {/* After a run the form folds away so the stage has the screen to itself */}
+      {run && (
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+          <p className="font-mono text-xs text-slate-400">
+            {run.numbers.length} elementos · objetivo <strong className="text-emerald-300">{run.target}</strong>
+          </p>
+          <button type="button" className="control" aria-expanded={formOpen} onClick={() => setFormOpen((open) => !open)}>
+            {formOpen ? 'Ocultar datos' : 'Cambiar datos'}
+          </button>
+        </div>
+      )}
+
+      <form onSubmit={submit} hidden={!formOpen} className="my-6 space-y-4" aria-busy={loading}>
         {/* Mode Selector Tabs */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
           <div role="tablist" aria-label="Modo de entrada de datos" className="flex items-center gap-2">
@@ -289,20 +300,15 @@ export function BinarySearchLab() {
           </div>
         </div>
 
-        {run && (
-          <p className="text-[11px] text-slate-400">
-            Los cambios del formulario se aplican al ejecutar otra búsqueda. La reproducción conserva los datos de su ejecución.
-          </p>
-        )}
       </form>
 
       {loading && <p role="status" className="mb-6 text-sm text-slate-300">Cargando Pyodide y ejecutando tu archivo Python en segundo plano. La descarga inicial puede tardar unos segundos.</p>}
       {error && <p role="alert" className="mb-6 rounded-xl border border-rose-800 bg-rose-950/40 p-4 text-rose-200">{error}</p>}
       {run ? (
-        <div className="space-y-6">
+        <div className="mt-6 space-y-5">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <fieldset className="flex flex-wrap items-center gap-2">
-              <legend className="mb-2 text-xs uppercase tracking-wider text-slate-400">Representación</legend>
+              <legend className="sr-only">Representación</legend>
               <label className="view-option"><input type="radio" name="array-view" value="bars" checked={view === 'bars'} onChange={() => setView('bars')} /> Barras</label>
               <label className="view-option"><input type="radio" name="array-view" value="cells" checked={view === 'cells'} onChange={() => setView('cells')} /> Celdas</label>
             </fieldset>
@@ -326,8 +332,6 @@ export function BinarySearchLab() {
               question={question}
               feedback={prediction.feedback}
               score={prediction.score}
-              position={playback.position}
-              total={run.events.length}
               onAnswer={(optionId) => question && prediction.answer(question, optionId)}
               onContinue={prediction.continue}
               onRestart={prediction.restart}
@@ -355,7 +359,7 @@ export function BinarySearchLab() {
             />
           )}
         </div>
-      ) : !loading && <p className="text-sm text-slate-400">Ejecuta una búsqueda para cargar sus pasos. Después podrás recorrerlos a tu ritmo.</p>}
+      ) : !loading && <p className="text-sm text-slate-400">Ejecuta una búsqueda para ver sus pasos.</p>}
     </section>
   )
 }
