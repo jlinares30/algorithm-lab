@@ -1,7 +1,7 @@
 import type { ArrayItem } from '../../components/ArrayVisualization'
 import type { LinearSearchEvent } from '../../execution/linearSearch'
 import { parseNumberList, parseTarget } from '../../input/parseNumbers'
-import type { PredictionQuestion } from '../../prediction/usePrediction'
+import type { PredictionOption, PredictionQuestion } from '../../prediction/usePrediction'
 
 export function parseLinearSearchInput(list: string, targetText: string) {
   // Linear search works on any order, so the list is not required to be sorted.
@@ -52,11 +52,28 @@ export function getLinearSnapshot(numbers: number[], events: LinearSearchEvent[]
   }
 }
 
-const linearPredictionOptions: { id: LinearSearchEvent['action']; label: string }[] = [
-  { id: 'check', label: 'No coincide: avanzar al siguiente' },
-  { id: 'found', label: 'Encontrado: es el objetivo' },
-  { id: 'not_found', label: 'Fin de la lista: el objetivo no está' },
-]
+// What each option means on screen. Every option gets a preview from the same
+// rule, whether or not it is the right answer, so hovering reveals nothing.
+function linearPredictionOptions(count: number, event: LinearSearchEvent): PredictionOption[] {
+  const { index } = event
+  return [
+    {
+      id: 'check',
+      label: 'No coincide: avanzar al siguiente',
+      preview: index === null ? undefined : { kind: 'discard', from: index, to: index },
+    },
+    {
+      id: 'found',
+      label: 'Encontrado: es el objetivo',
+      preview: index === null ? undefined : { kind: 'found', from: index, to: index },
+    },
+    {
+      id: 'not_found',
+      label: 'Fin de la lista: el objetivo no está',
+      preview: { kind: 'discard', from: 0, to: count - 1 },
+    },
+  ]
+}
 
 /** Question about a step that has not been revealed yet; the answer is the recorded action. */
 export function getLinearPrediction(numbers: number[], target: number, event: LinearSearchEvent): PredictionQuestion {
@@ -64,7 +81,7 @@ export function getLinearPrediction(numbers: number[], target: number, event: Li
     prompt: event.index === null
       ? `Ya no quedan elementos por revisar. El objetivo es ${target}. ¿Qué hace el algoritmo?`
       : `El puntero i llega al índice ${event.index} (valor ${numbers[event.index]}). El objetivo es ${target}. ¿Qué hace el algoritmo?`,
-    options: linearPredictionOptions,
+    options: linearPredictionOptions(numbers.length, event),
     answer: event.action,
   }
 }

@@ -23,9 +23,11 @@ interface Props {
   dense: boolean
   selectedItemIndex?: number | null
   onSelectItem?: (index: number) => void
+  /** Marks an index range as a tentative outcome, without changing any item state. */
+  preview?: { kind: 'discard' | 'found'; from: number; to: number } | null
 }
 
-export function ArrayVisualization({ items, view, target, pointers, range, dense, selectedItemIndex, onSelectItem }: Props) {
+export function ArrayVisualization({ items, view, target, pointers, range, dense, selectedItemIndex, onSelectItem, preview }: Props) {
   const values = items.map((item) => item.value)
   const lower = Math.min(0, target, ...values)
   const upper = Math.max(0, target, ...values)
@@ -75,6 +77,7 @@ export function ArrayVisualization({ items, view, target, pointers, range, dense
                         data-state={item.state}
                         data-pending={item.pending}
                         data-selected={isSelected}
+                        data-preview={preview && item.index >= preview.from && item.index <= preview.to ? preview.kind : undefined}
                         title={item.pending ? 'Esta secuencia descarta este elemento tras mostrar la comparación.' : `${item.label} (Clic para inspeccionar)`}
                         onClick={() => onSelectItem?.(item.index)}
                       >

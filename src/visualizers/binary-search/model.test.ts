@@ -82,3 +82,29 @@ describe('Preguntas de predicción de Binary Search', () => {
     expect(question.prompt).toContain('left=1, right=0')
   })
 })
+
+describe('Vista previa de las opciones de Binary Search', () => {
+  const list = [2, 5, 9, 14, 20]
+  const previews = (event: SearchEvent) =>
+    Object.fromEntries(getSearchPrediction(list, 14, event).options.map((option) => [option.id, option.preview]))
+
+  it('marca la mitad que descartaría cada opción, incluido mid', () => {
+    expect(previews({ left: 0, mid: 2, right: 4, action: 'move_right' })).toEqual({
+      move_right: { kind: 'discard', from: 0, to: 2 },
+      move_left: { kind: 'discard', from: 2, to: 4 },
+      found: { kind: 'found', from: 2, to: 2 },
+      not_found: { kind: 'discard', from: 0, to: 4 },
+    })
+  })
+
+  it('no depende de cuál sea la respuesta correcta', () => {
+    const base = { left: 0, mid: 2, right: 4 }
+    expect(previews({ ...base, action: 'move_left' })).toEqual(previews({ ...base, action: 'found' }))
+  })
+
+  it('no ofrece vista previa de mid cuando el rango está vacío', () => {
+    const empty = previews({ left: 3, mid: null, right: 2, action: 'not_found' })
+    expect(empty.move_right).toBeUndefined()
+    expect(empty.found).toBeUndefined()
+  })
+})

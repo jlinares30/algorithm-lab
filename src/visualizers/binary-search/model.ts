@@ -1,6 +1,6 @@
 import type { SearchEvent } from '../../execution/binarySearch'
 import { parseNumberList, parseTarget } from '../../input/parseNumbers'
-import type { PredictionQuestion } from '../../prediction/usePrediction'
+import type { PredictionOption, PredictionQuestion } from '../../prediction/usePrediction'
 
 export function parseSearchInput(list: string, targetText: string) {
   const numbers = parseNumberList(list, { requireSorted: true })
@@ -76,12 +76,33 @@ export function getSearchScene(numbers: number[], events: SearchEvent[], positio
   }
 }
 
-const searchPredictionOptions: { id: SearchEvent['action']; label: string }[] = [
-  { id: 'move_right', label: 'Descartar la mitad izquierda' },
-  { id: 'move_left', label: 'Descartar la mitad derecha' },
-  { id: 'found', label: 'Encontrado: mid es el objetivo' },
-  { id: 'not_found', label: 'Rango vacío: el objetivo no está' },
-]
+// What each option means on screen. Every option gets a preview from the same
+// rule, whether or not it is the right answer, so hovering reveals nothing.
+function searchPredictionOptions(event: SearchEvent): PredictionOption[] {
+  const { left, mid, right } = event
+  return [
+    {
+      id: 'move_right',
+      label: 'Descartar la mitad izquierda',
+      preview: mid === null ? undefined : { kind: 'discard', from: left, to: mid },
+    },
+    {
+      id: 'move_left',
+      label: 'Descartar la mitad derecha',
+      preview: mid === null ? undefined : { kind: 'discard', from: mid, to: right },
+    },
+    {
+      id: 'found',
+      label: 'Encontrado: mid es el objetivo',
+      preview: mid === null ? undefined : { kind: 'found', from: mid, to: mid },
+    },
+    {
+      id: 'not_found',
+      label: 'Rango vacío: el objetivo no está',
+      preview: { kind: 'discard', from: left, to: right },
+    },
+  ]
+}
 
 /** Question about a step that has not been revealed yet; the answer is the recorded action. */
 export function getSearchPrediction(numbers: number[], target: number, event: SearchEvent): PredictionQuestion {
@@ -90,7 +111,7 @@ export function getSearchPrediction(numbers: number[], target: number, event: Se
     prompt: event.mid === null
       ? `El rango queda en ${range}. El objetivo es ${target}. ¿Qué hace el algoritmo?`
       : `Con ${range}, mid es el índice ${event.mid} (valor ${numbers[event.mid]}). El objetivo es ${target}. ¿Qué hace el algoritmo?`,
-    options: searchPredictionOptions,
+    options: searchPredictionOptions(event),
     answer: event.action,
   }
 }

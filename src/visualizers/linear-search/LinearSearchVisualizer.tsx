@@ -4,6 +4,7 @@ import { ArrayVisualization } from '../../components/ArrayVisualization'
 import type { ArrayView } from '../../components/ArrayVisualization'
 import { ArrayOverview } from '../../components/ArrayOverview'
 import type { LinearSearchEvent } from '../../execution/linearSearch'
+import type { PredictionPreview } from '../../prediction/usePrediction'
 import { explainLinearEvent, getLinearSnapshot } from './model'
 
 interface Props {
@@ -13,9 +14,10 @@ interface Props {
   position: number
   view: ArrayView
   speed: number
+  preview?: PredictionPreview | null
 }
 
-export function LinearSearchVisualizer({ numbers, target, events, position, view, speed }: Props) {
+export function LinearSearchVisualizer({ numbers, target, events, position, view, speed, preview }: Props) {
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null)
   const snapshot = useMemo(() => getLinearSnapshot(numbers, events, position), [numbers, events, position])
   const { event, current, comparisons, items } = snapshot
@@ -82,6 +84,7 @@ export function LinearSearchVisualizer({ numbers, target, events, position, view
         range={null}
         dense={numbers.length > 40}
         selectedItemIndex={selectedItemIndex}
+        preview={preview}
         onSelectItem={(index) => setSelectedItemIndex(selectedItemIndex === index ? null : index)}
       />
 

@@ -4,6 +4,7 @@ import { ArrayVisualization } from '../../components/ArrayVisualization'
 import type { ArrayView } from '../../components/ArrayVisualization'
 import { ArrayOverview } from '../../components/ArrayOverview'
 import type { AnimationClock } from '../../playback/animationClock'
+import type { PredictionPreview } from '../../prediction/usePrediction'
 import { getArrayCamera } from '../../animations/arrayCamera'
 import { useSearchAnimation } from '../../animations/useSearchAnimation'
 import { explainEvent, getSearchScene } from './model'
@@ -17,6 +18,7 @@ interface Props {
   clock: AnimationClock
   revision: number
   onToggleImmersive?: () => void
+  preview?: PredictionPreview | null
 }
 
 export function BinarySearchVisualizer({
@@ -28,6 +30,7 @@ export function BinarySearchVisualizer({
   clock,
   revision,
   onToggleImmersive,
+  preview,
 }: Props) {
   const root = useRef<HTMLDivElement>(null)
   const [columns, setColumns] = useState(12)
@@ -154,6 +157,7 @@ export function BinarySearchVisualizer({
         range={scene.before}
         dense={!zoom && numbers.length > columns}
         selectedItemIndex={selectedItemIndex}
+        preview={preview}
         onSelectItem={(index) => setSelectedItemIndex(selectedItemIndex === index ? null : index)}
       />
 

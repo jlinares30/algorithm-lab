@@ -1,8 +1,17 @@
 import { useState } from 'react'
 
+/** What choosing an option would do to the array: the affected index range (inclusive). */
+export interface PredictionPreview {
+  kind: 'discard' | 'found'
+  from: number
+  to: number
+}
+
 export interface PredictionOption {
   id: string
   label: string
+  /** Shown on the array while the option is hovered or focused. */
+  preview?: PredictionPreview
 }
 
 /** A question about the step that is about to be revealed. */

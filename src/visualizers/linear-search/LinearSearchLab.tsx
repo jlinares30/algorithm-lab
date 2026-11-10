@@ -9,6 +9,7 @@ import type { LinearSearchExecution, LinearSearchResult } from '../../execution/
 import { maxListLength } from '../../input/parseNumbers'
 import { usePlayback } from '../../playback/usePlayback'
 import { usePrediction } from '../../prediction/usePrediction'
+import type { PredictionPreview } from '../../prediction/usePrediction'
 import { LinearSearchVisualizer } from './LinearSearchVisualizer'
 import { getLinearPrediction, parseLinearSearchInput } from './model'
 
@@ -31,6 +32,7 @@ export function LinearSearchLab() {
   const execution = useRef<LinearSearchExecution | null>(null)
   const playback = usePlayback(run?.events.length ?? 0)
   const prediction = usePrediction(playback)
+  const [preview, setPreview] = useState<PredictionPreview | null>(null)
   // The step about to be revealed, if any.
   const nextEvent = run?.events[playback.position]
   const question = run && nextEvent ? getLinearPrediction(run.numbers, run.target, nextEvent) : null
@@ -207,6 +209,7 @@ export function LinearSearchLab() {
             position={playback.position}
             view={view}
             speed={playback.speed}
+            preview={prediction.enabled && !prediction.feedback ? preview : null}
           />
           {prediction.enabled ? (
             <PredictionPanel
@@ -214,6 +217,7 @@ export function LinearSearchLab() {
               feedback={prediction.feedback}
               score={prediction.score}
               onAnswer={(optionId) => question && prediction.answer(question, optionId)}
+              onPreview={setPreview}
               onContinue={prediction.continue}
               onRestart={prediction.restart}
             />

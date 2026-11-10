@@ -1,4 +1,4 @@
-import type { PredictionFeedback, PredictionQuestion } from '../prediction/usePrediction'
+import type { PredictionFeedback, PredictionPreview, PredictionQuestion } from '../prediction/usePrediction'
 
 interface Props {
   /** Question about the next step; null when every step has been revealed. */
@@ -6,11 +6,13 @@ interface Props {
   feedback: PredictionFeedback | null
   score: { correct: number; answered: number }
   onAnswer: (optionId: string) => void
+  /** Called with an option's preview while it is hovered or focused, and null when it is not. */
+  onPreview?: (preview: PredictionPreview | null) => void
   onContinue: () => void
   onRestart: () => void
 }
 
-export function PredictionPanel({ question, feedback, score, onAnswer, onContinue, onRestart }: Props) {
+export function PredictionPanel({ question, feedback, score, onAnswer, onPreview, onContinue, onRestart }: Props) {
   const finished = !feedback && question === null
 
   return (
@@ -43,7 +45,19 @@ export function PredictionPanel({ question, feedback, score, onAnswer, onContinu
           <legend className="text-sm leading-relaxed text-slate-200">{question.prompt}</legend>
           <div className="flex flex-wrap gap-2">
             {question.options.map((option) => (
-              <button key={option.id} type="button" className="control text-left" onClick={() => onAnswer(option.id)}>
+              <button
+                key={option.id}
+                type="button"
+                className="control text-left"
+                onMouseEnter={() => onPreview?.(option.preview ?? null)}
+                onMouseLeave={() => onPreview?.(null)}
+                onFocus={() => onPreview?.(option.preview ?? null)}
+                onBlur={() => onPreview?.(null)}
+                onClick={() => {
+                  onPreview?.(null)
+                  onAnswer(option.id)
+                }}
+              >
                 {option.label}
               </button>
             ))}

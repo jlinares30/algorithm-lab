@@ -286,4 +286,35 @@ describe('Modo predicción en Binary Search', () => {
     fireEvent.click(panel.getByRole('button', { name: 'Descartar la mitad izquierda' }))
     expect(panel.getByRole('status').textContent).toContain('✓ Correcto')
   })
+
+  it('muestra en el arreglo lo que haría cada opción al pasar el cursor, sin cambiar el paso', async () => {
+    await start()
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Modo predicción' }))
+    const panel = within(screen.getByRole('region', { name: 'Modo predicción' }))
+    const marked = (kind: string) =>
+      [...document.querySelectorAll(`.array-item[data-preview=${kind}]`)].map((item) => item.getAttribute('aria-label'))
+
+    // Primera pregunta: left=0, mid=5, right=10.
+    fireEvent.mouseEnter(panel.getByRole('button', { name: 'Descartar la mitad izquierda' }))
+    expect(marked('discard')).toHaveLength(6)
+    expect(marked('discard')[0]).toContain('Índice 0')
+    expect(marked('discard')[5]).toContain('Índice 5')
+
+    fireEvent.mouseLeave(panel.getByRole('button', { name: 'Descartar la mitad izquierda' }))
+    expect(marked('discard')).toHaveLength(0)
+
+    fireEvent.mouseEnter(panel.getByRole('button', { name: 'Descartar la mitad derecha' }))
+    expect(marked('discard')).toHaveLength(6)
+    expect(marked('discard')[0]).toContain('Índice 5')
+
+    // También con el teclado.
+    fireEvent.focus(panel.getByRole('button', { name: 'Encontrado: mid es el objetivo' }))
+    expect(marked('found')).toHaveLength(1)
+    expect(marked('found')[0]).toContain('Índice 5')
+    expect(screen.getByText('0 de 3')).toBeDefined()
+
+    // Al responder, la vista previa desaparece.
+    fireEvent.click(panel.getByRole('button', { name: 'Encontrado: mid es el objetivo' }))
+    expect(document.querySelector('.array-item[data-preview]')).toBeNull()
+  })
 })

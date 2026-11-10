@@ -229,6 +229,11 @@ body {
 .array-item[data-state=mid] .array-glyph { border-color: #fbbf24; background-color: #92400e; color: #fef3c7; transform: translateY(-4px) scaleX(1.08); }
 .array-item[data-state=found] .array-glyph { border-color: #34d399; background-color: #065f46; color: #d1fae5; transform: translateY(-4px) scaleX(1.08); }
 .array-item[data-state=discarded] .array-glyph { border-color: #475569; background-color: #334155; opacity: 0.3; transform: translateY(12px) scaleX(0.82); }
+/* Tentative outcome while hovering a prediction option */
+.array-item[data-preview=discard] .array-glyph { border-color: #f87171; background-color: #7f1d1d; background-image: none; color: #fecaca; opacity: 0.9; }
+.array-item[data-preview=found] .array-glyph { border-color: #34d399; background-color: #065f46; background-image: none; color: #d1fae5; opacity: 1; }
+.array-item[data-preview=discard] .array-value { color: #fca5a5; }
+.array-item[data-preview=found] .array-value { color: #6ee7b7; }
 .array-item-caption { position: absolute; bottom: 8px; width: 100%; padding: 0 3px; text-align: center; font-family: ui-monospace, monospace; }
 .array-value { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.75rem; color: #cbd5e1; transition: color var(--step-duration) ease; }
 .array-index { display: block; margin-top: 5px; color: #94a3b8; font-size: 0.65rem; }

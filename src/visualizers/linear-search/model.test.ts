@@ -76,3 +76,14 @@ describe('Preguntas de predicción de Linear Search', () => {
     expect(getLinearPrediction(numbers, 5, missing[4]).prompt).toContain('Ya no quedan elementos')
   })
 })
+
+describe('Vista previa de las opciones de Linear Search', () => {
+  it('marca el elemento revisado o toda la lista según la opción', () => {
+    const options = getLinearPrediction(numbers, 19, found[1]).options
+    expect(Object.fromEntries(options.map((option) => [option.id, option.preview]))).toEqual({
+      check: { kind: 'discard', from: 1, to: 1 },
+      found: { kind: 'found', from: 1, to: 1 },
+      not_found: { kind: 'discard', from: 0, to: 3 },
+    })
+  })
+})

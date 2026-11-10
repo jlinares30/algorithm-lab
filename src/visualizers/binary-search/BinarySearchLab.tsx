@@ -10,6 +10,7 @@ import { BinarySearchVisualizer } from './BinarySearchVisualizer'
 import { getSearchPrediction, parseSearchInput } from './model'
 import { usePlayback } from '../../playback/usePlayback'
 import { usePrediction } from '../../prediction/usePrediction'
+import type { PredictionPreview } from '../../prediction/usePrediction'
 import { BinarySearch3DView } from './3d/BinarySearch3DView'
 
 interface Run extends SearchResult {
@@ -34,6 +35,7 @@ export function BinarySearchLab() {
   const execution = useRef<SearchExecution | null>(null)
   const playback = usePlayback(run?.events.length ?? 0)
   const prediction = usePrediction(playback)
+  const [preview, setPreview] = useState<PredictionPreview | null>(null)
   // The step about to be revealed, if any.
   const nextEvent = run?.events[playback.position]
   const question = run && nextEvent ? getSearchPrediction(run.numbers, run.target, nextEvent) : null
@@ -324,6 +326,7 @@ export function BinarySearchLab() {
             view={view}
             clock={playback.clock}
             revision={playback.revision}
+            preview={prediction.enabled && !prediction.feedback ? preview : null}
             // The 3D view shows the full timeline, which would reveal the answers.
             onToggleImmersive={prediction.enabled ? undefined : () => setIsImmersive3D(true)}
           />
@@ -333,6 +336,7 @@ export function BinarySearchLab() {
               feedback={prediction.feedback}
               score={prediction.score}
               onAnswer={(optionId) => question && prediction.answer(question, optionId)}
+              onPreview={setPreview}
               onContinue={prediction.continue}
               onRestart={prediction.restart}
             />
