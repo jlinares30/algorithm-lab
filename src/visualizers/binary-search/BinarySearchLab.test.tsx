@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { executeBinarySearch } from '../../execution/binarySearch'
 import type { SearchResult } from '../../execution/binarySearch'
@@ -259,5 +259,26 @@ describe('Visualización por eventos', () => {
     expect(screen.getByText('0 de 1')).toBeDefined()
     fireEvent.click(screen.getByRole('button', { name: 'Avanzar' }))
     expect(screen.getByRole('status').textContent).toContain('42 = 42')
+  })
+})
+
+describe('Modo predicción en Binary Search', () => {
+  it('pregunta por la decisión de cada paso sin revelar la línea de tiempo ni el 3D', async () => {
+    await start()
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Modo predicción' }))
+    const panel = within(screen.getByRole('region', { name: 'Modo predicción' }))
+
+    expect(screen.queryByRole('region', { name: 'Navegación entre eventos' })).toBeNull()
+    expect(screen.queryByRole('button', { name: /Modo Inmersivo 3D/ })).toBeNull()
+
+    expect(panel.getByText(/Con left=0, right=10, mid es el índice 5 \(valor 27\)\. El objetivo es 69/)).toBeDefined()
+    fireEvent.click(panel.getByRole('button', { name: 'Descartar la mitad derecha' }))
+    expect(panel.getByRole('status').textContent).toContain('Tu código hizo: Descartar la mitad izquierda')
+    expect(screen.getByText('1 de 3')).toBeDefined()
+
+    fireEvent.click(panel.getByRole('button', { name: 'Siguiente pregunta' }))
+    expect(panel.getByText(/Con left=6, right=10, mid es el índice 8 \(valor 56\)/)).toBeDefined()
+    fireEvent.click(panel.getByRole('button', { name: 'Descartar la mitad izquierda' }))
+    expect(panel.getByRole('status').textContent).toContain('✓ Correcto')
   })
 })

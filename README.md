@@ -142,6 +142,15 @@ Pulsa **⛶ Modo Inmersivo 3D** en la cabecera del visualizador para acceder a l
    - Controles completos de reproducción y barra deslizante continua (`EventTimeline`).
    - Atajos de teclado: `Espacio` (reproducir/pausar), `←` / `→` (paso anterior/siguiente) y `Escape` (volver a 2D).
 
+## Modo predicción
+
+Con una ejecución cargada, la casilla «Modo predicción» convierte la reproducción en
+preguntas: antes de revelar cada paso, el laboratorio pregunta qué hará el algoritmo.
+Al responder se muestra el paso, si la predicción fue correcta y el total de aciertos.
+La respuesta correcta sale siempre del paso grabado por Python, no de lógica en la
+interfaz. Mientras está activo se ocultan la línea de tiempo y el modo 3D, que
+mostrarían los pasos por adelantado.
+
 ## Estructura
 
 ```text
@@ -160,6 +169,7 @@ src/
   animations/           # Geometría de cámara, timeline GSAP y adaptador React
   playback/             # usePlayback y contrato del reloj de animación, independientes de GSAP y WebGL
   input/                # Validación compartida de listas y objetivos
+  prediction/           # Modo predicción: preguntas y puntuación antes de revelar cada paso
   execution/
     python.worker.ts    # Worker Pyodide que ejecuta el archivo Python de cada algoritmo
     pythonWorker.ts     # Protocolo y cliente del worker

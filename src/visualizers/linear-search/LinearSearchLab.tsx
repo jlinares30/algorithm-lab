@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { PlaybackControls } from '../../components/PlaybackControls'
 import { EventTimeline } from '../../components/EventTimeline'
+import { PredictionPanel } from '../../components/PredictionPanel'
 import type { ArrayView } from '../../components/ArrayVisualization'
 import { executeLinearSearch } from '../../execution/linearSearch'
 import type { LinearSearchExecution, LinearSearchResult } from '../../execution/linearSearch'
 import { maxListLength } from '../../input/parseNumbers'
 import { usePlayback } from '../../playback/usePlayback'
+import { usePrediction } from '../../prediction/usePrediction'
 import { LinearSearchVisualizer } from './LinearSearchVisualizer'
-import { parseLinearSearchInput } from './model'
+import { getLinearPrediction, parseLinearSearchInput } from './model'
 
 interface Run extends LinearSearchResult {
   numbers: number[]
@@ -27,6 +29,10 @@ export function LinearSearchLab() {
   const [view, setView] = useState<ArrayView>('bars')
   const execution = useRef<LinearSearchExecution | null>(null)
   const playback = usePlayback(run?.events.length ?? 0)
+  const prediction = usePrediction(playback)
+  // The step about to be revealed, if any.
+  const nextEvent = run?.events[playback.position]
+  const question = run && nextEvent ? getLinearPrediction(run.numbers, run.target, nextEvent) : null
 
   useEffect(() => () => {
     execution.current?.dispose()
@@ -51,7 +57,7 @@ export function LinearSearchLab() {
       setError((error as Error).message)
       return
     }
-    playback.reset()
+    prediction.restart()
     setRun(null)
     setLoading(true)
     let current: LinearSearchExecution | null = null
@@ -177,11 +183,16 @@ export function LinearSearchLab() {
       {error && <p role="alert" className="mb-6 rounded-xl border border-rose-800 bg-rose-950/40 p-4 text-rose-200">{error}</p>}
       {run ? (
         <div className="space-y-6">
-          <fieldset className="flex flex-wrap items-center gap-2">
-            <legend className="mb-2 text-xs uppercase tracking-wider text-slate-400">Representación</legend>
-            <label className="view-option"><input type="radio" name="linear-array-view" value="bars" checked={view === 'bars'} onChange={() => setView('bars')} /> Barras</label>
-            <label className="view-option"><input type="radio" name="linear-array-view" value="cells" checked={view === 'cells'} onChange={() => setView('cells')} /> Celdas</label>
-          </fieldset>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <fieldset className="flex flex-wrap items-center gap-2">
+              <legend className="mb-2 text-xs uppercase tracking-wider text-slate-400">Representación</legend>
+              <label className="view-option"><input type="radio" name="linear-array-view" value="bars" checked={view === 'bars'} onChange={() => setView('bars')} /> Barras</label>
+              <label className="view-option"><input type="radio" name="linear-array-view" value="cells" checked={view === 'cells'} onChange={() => setView('cells')} /> Celdas</label>
+            </fieldset>
+            <label className="view-option">
+              <input type="checkbox" checked={prediction.enabled} onChange={(event) => prediction.setEnabled(event.target.checked)} /> Modo predicción
+            </label>
+          </div>
           <LinearSearchVisualizer
             numbers={run.numbers}
             target={run.target}
@@ -190,15 +201,28 @@ export function LinearSearchLab() {
             view={view}
             speed={playback.speed}
           />
-          <EventTimeline
-            labels={['Inicio', ...run.events.map((event) => event.index === null ? event.action : `${event.action} [${event.index}]`)]}
-            position={playback.position}
-            currentTime={playback.currentTime}
-            clock={playback.clock}
-            onSeek={playback.seek}
-            onSeekContinuous={playback.seekContinuous}
-          />
-          <PlaybackControls position={playback.position} total={run.events.length} playing={playback.playing} speed={playback.speed} onPrevious={playback.previous} onNext={playback.next} onToggle={playback.toggle} onReset={playback.reset} onSpeedChange={playback.setSpeed} />
+          {prediction.enabled ? (
+            <PredictionPanel
+              question={question}
+              feedback={prediction.feedback}
+              score={prediction.score}
+              position={playback.position}
+              total={run.events.length}
+              onAnswer={(optionId) => question && prediction.answer(question, optionId)}
+              onContinue={prediction.continue}
+              onRestart={prediction.restart}
+            />
+          ) : (<>
+            <EventTimeline
+              labels={['Inicio', ...run.events.map((event) => event.index === null ? event.action : `${event.action} [${event.index}]`)]}
+              position={playback.position}
+              currentTime={playback.currentTime}
+              clock={playback.clock}
+              onSeek={playback.seek}
+              onSeekContinuous={playback.seekContinuous}
+            />
+            <PlaybackControls position={playback.position} total={run.events.length} playing={playback.playing} speed={playback.speed} onPrevious={playback.previous} onNext={playback.next} onToggle={playback.toggle} onReset={playback.reset} onSpeedChange={playback.setSpeed} />
+          </>)}
         </div>
       ) : !loading && <p className="text-sm text-slate-400">Ejecuta una búsqueda para cargar sus pasos. Después podrás recorrerlos a tu ritmo.</p>}
     </section>

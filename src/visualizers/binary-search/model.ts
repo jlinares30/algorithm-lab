@@ -1,5 +1,6 @@
 import type { SearchEvent } from '../../execution/binarySearch'
 import { parseNumberList, parseTarget } from '../../input/parseNumbers'
+import type { PredictionQuestion } from '../../prediction/usePrediction'
 
 export function parseSearchInput(list: string, targetText: string) {
   const numbers = parseNumberList(list, { requireSorted: true })
@@ -72,5 +73,24 @@ export function getSearchScene(numbers: number[], events: SearchEvent[], positio
     focusAfter: event?.action === 'found' ? event.mid! : next?.mid ?? event?.mid ?? 0,
     zoomRange: event?.action === 'found' ? { left: event.mid!, right: event.mid! } : after,
     prevMid: previous?.mid ?? null,
+  }
+}
+
+const searchPredictionOptions: { id: SearchEvent['action']; label: string }[] = [
+  { id: 'move_right', label: 'Descartar la mitad izquierda' },
+  { id: 'move_left', label: 'Descartar la mitad derecha' },
+  { id: 'found', label: 'Encontrado: mid es el objetivo' },
+  { id: 'not_found', label: 'Rango vacío: el objetivo no está' },
+]
+
+/** Question about a step that has not been revealed yet; the answer is the recorded action. */
+export function getSearchPrediction(numbers: number[], target: number, event: SearchEvent): PredictionQuestion {
+  const range = `left=${event.left}, right=${event.right}`
+  return {
+    prompt: event.mid === null
+      ? `El rango queda en ${range}. El objetivo es ${target}. ¿Qué hace el algoritmo?`
+      : `Con ${range}, mid es el índice ${event.mid} (valor ${numbers[event.mid]}). El objetivo es ${target}. ¿Qué hace el algoritmo?`,
+    options: searchPredictionOptions,
+    answer: event.action,
   }
 }

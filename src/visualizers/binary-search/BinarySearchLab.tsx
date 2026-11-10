@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { PlaybackControls } from '../../components/PlaybackControls'
 import { EventTimeline } from '../../components/EventTimeline'
+import { PredictionPanel } from '../../components/PredictionPanel'
 import type { ArrayView } from '../../components/ArrayVisualization'
 import { executeBinarySearch } from '../../execution/binarySearch'
 import type { SearchExecution, SearchResult } from '../../execution/binarySearch'
 import { BinarySearchVisualizer } from './BinarySearchVisualizer'
-import { parseSearchInput } from './model'
+import { getSearchPrediction, parseSearchInput } from './model'
 import { usePlayback } from '../../playback/usePlayback'
+import { usePrediction } from '../../prediction/usePrediction'
 import { BinarySearch3DView } from './3d/BinarySearch3DView'
 
 interface Run extends SearchResult {
@@ -30,6 +32,10 @@ export function BinarySearchLab() {
   const [view, setView] = useState<ArrayView>('bars')
   const execution = useRef<SearchExecution | null>(null)
   const playback = usePlayback(run?.events.length ?? 0)
+  const prediction = usePrediction(playback)
+  // The step about to be revealed, if any.
+  const nextEvent = run?.events[playback.position]
+  const question = run && nextEvent ? getSearchPrediction(run.numbers, run.target, nextEvent) : null
 
   useEffect(() => () => {
     execution.current?.dispose()
@@ -46,7 +52,7 @@ export function BinarySearchLab() {
       setError((error as Error).message)
       return
     }
-    playback.reset()
+    prediction.restart()
     setRun(null)
     setLoading(true)
     let current: SearchExecution | null = null
@@ -294,11 +300,16 @@ export function BinarySearchLab() {
       {error && <p role="alert" className="mb-6 rounded-xl border border-rose-800 bg-rose-950/40 p-4 text-rose-200">{error}</p>}
       {run ? (
         <div className="space-y-6">
-          <fieldset className="flex flex-wrap items-center gap-2">
-            <legend className="mb-2 text-xs uppercase tracking-wider text-slate-400">Representación</legend>
-            <label className="view-option"><input type="radio" name="array-view" value="bars" checked={view === 'bars'} onChange={() => setView('bars')} /> Barras</label>
-            <label className="view-option"><input type="radio" name="array-view" value="cells" checked={view === 'cells'} onChange={() => setView('cells')} /> Celdas</label>
-          </fieldset>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <fieldset className="flex flex-wrap items-center gap-2">
+              <legend className="mb-2 text-xs uppercase tracking-wider text-slate-400">Representación</legend>
+              <label className="view-option"><input type="radio" name="array-view" value="bars" checked={view === 'bars'} onChange={() => setView('bars')} /> Barras</label>
+              <label className="view-option"><input type="radio" name="array-view" value="cells" checked={view === 'cells'} onChange={() => setView('cells')} /> Celdas</label>
+            </fieldset>
+            <label className="view-option">
+              <input type="checkbox" checked={prediction.enabled} onChange={(event) => prediction.setEnabled(event.target.checked)} /> Modo predicción
+            </label>
+          </div>
           <BinarySearchVisualizer
             numbers={run.numbers}
             target={run.target}
@@ -307,17 +318,31 @@ export function BinarySearchLab() {
             view={view}
             clock={playback.clock}
             revision={playback.revision}
-            onToggleImmersive={() => setIsImmersive3D(true)}
+            // The 3D view shows the full timeline, which would reveal the answers.
+            onToggleImmersive={prediction.enabled ? undefined : () => setIsImmersive3D(true)}
           />
-          <EventTimeline
-            labels={['Inicio', ...run.events.map((event) => event.action)]}
-            position={playback.position}
-            currentTime={playback.currentTime}
-            clock={playback.clock}
-            onSeek={playback.seek}
-            onSeekContinuous={playback.seekContinuous}
-          />
-          <PlaybackControls position={playback.position} total={run.events.length} playing={playback.playing} speed={playback.speed} onPrevious={playback.previous} onNext={playback.next} onToggle={playback.toggle} onReset={playback.reset} onSpeedChange={playback.setSpeed} />
+          {prediction.enabled ? (
+            <PredictionPanel
+              question={question}
+              feedback={prediction.feedback}
+              score={prediction.score}
+              position={playback.position}
+              total={run.events.length}
+              onAnswer={(optionId) => question && prediction.answer(question, optionId)}
+              onContinue={prediction.continue}
+              onRestart={prediction.restart}
+            />
+          ) : (<>
+            <EventTimeline
+              labels={['Inicio', ...run.events.map((event) => event.action)]}
+              position={playback.position}
+              currentTime={playback.currentTime}
+              clock={playback.clock}
+              onSeek={playback.seek}
+              onSeekContinuous={playback.seekContinuous}
+            />
+            <PlaybackControls position={playback.position} total={run.events.length} playing={playback.playing} speed={playback.speed} onPrevious={playback.previous} onNext={playback.next} onToggle={playback.toggle} onReset={playback.reset} onSpeedChange={playback.setSpeed} />
+          </>)}
 
           {/* Fullscreen 3D Immersive Experience Overlay */}
           {isImmersive3D && (

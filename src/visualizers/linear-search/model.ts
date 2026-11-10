@@ -1,6 +1,7 @@
 import type { ArrayItem } from '../../components/ArrayVisualization'
 import type { LinearSearchEvent } from '../../execution/linearSearch'
 import { parseNumberList, parseTarget } from '../../input/parseNumbers'
+import type { PredictionQuestion } from '../../prediction/usePrediction'
 
 export function parseLinearSearchInput(list: string, targetText: string) {
   // Linear search works on any order, so the list is not required to be sorted.
@@ -48,5 +49,22 @@ export function getLinearSnapshot(numbers: number[], events: LinearSearchEvent[]
     current,
     comparisons: seen.filter((step) => step.index !== null).length,
     items,
+  }
+}
+
+const linearPredictionOptions: { id: LinearSearchEvent['action']; label: string }[] = [
+  { id: 'check', label: 'No coincide: avanzar al siguiente' },
+  { id: 'found', label: 'Encontrado: es el objetivo' },
+  { id: 'not_found', label: 'Fin de la lista: el objetivo no está' },
+]
+
+/** Question about a step that has not been revealed yet; the answer is the recorded action. */
+export function getLinearPrediction(numbers: number[], target: number, event: LinearSearchEvent): PredictionQuestion {
+  return {
+    prompt: event.index === null
+      ? `Ya no quedan elementos por revisar. El objetivo es ${target}. ¿Qué hace el algoritmo?`
+      : `El puntero i llega al índice ${event.index} (valor ${numbers[event.index]}). El objetivo es ${target}. ¿Qué hace el algoritmo?`,
+    options: linearPredictionOptions,
+    answer: event.action,
   }
 }

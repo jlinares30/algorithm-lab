@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { LinearSearchEvent } from '../../execution/linearSearch'
-import { explainLinearEvent, getLinearSnapshot, parseLinearSearchInput } from './model'
+import { explainLinearEvent, getLinearPrediction, getLinearSnapshot, parseLinearSearchInput } from './model'
 
 const numbers = [42, 7, 19, 3]
 const found: LinearSearchEvent[] = [
@@ -59,5 +59,20 @@ describe('Modelo de Linear Search', () => {
     expect(explainLinearEvent(found[2], numbers, 19)).toBe('19 = 19. Objetivo encontrado en el índice 2.')
     expect(explainLinearEvent(missing[3], numbers, 5)).toBe('3 ≠ 5. Se avanza al final de la lista.')
     expect(explainLinearEvent(missing[4], numbers, 5)).toBe('Se revisaron los 4 elementos sin coincidencias. 5 no está en la lista.')
+  })
+})
+
+describe('Preguntas de predicción de Linear Search', () => {
+  it('toma la respuesta del paso grabado por Python', () => {
+    expect(getLinearPrediction(numbers, 19, found[0]).answer).toBe('check')
+    expect(getLinearPrediction(numbers, 19, found[2]).answer).toBe('found')
+    expect(getLinearPrediction(numbers, 5, missing[4]).answer).toBe('not_found')
+  })
+
+  it('describe el elemento que se va a revisar sin dar la respuesta', () => {
+    const question = getLinearPrediction(numbers, 19, found[2])
+    expect(question.prompt).toContain('índice 2 (valor 19)')
+    expect(question.options.map((option) => option.id)).toEqual(['check', 'found', 'not_found'])
+    expect(getLinearPrediction(numbers, 5, missing[4]).prompt).toContain('Ya no quedan elementos')
   })
 })

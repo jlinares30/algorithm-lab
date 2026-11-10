@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getSearchSnapshot, parseSearchInput } from './model'
+import { getSearchPrediction, getSearchSnapshot, parseSearchInput } from './model'
 import type { SearchEvent } from '../../execution/binarySearch'
 import { decodeSearchResult } from '../../execution/binarySearch'
 
@@ -62,5 +62,23 @@ describe('Proyección de eventos a estado visual', () => {
     const found = getSearchSnapshot([-3], [{ left: 0, mid: 0, right: 0, action: 'found' }], 1)
     expect(found.items[0].state).toBe('found')
     expect(found.items[0].markers).toEqual(['left', 'mid', 'right'])
+  })
+})
+
+describe('Preguntas de predicción de Binary Search', () => {
+  const list = [2, 5, 9, 14, 20]
+
+  it('toma la respuesta del paso grabado por Python', () => {
+    const question = getSearchPrediction(list, 14, { left: 0, mid: 2, right: 4, action: 'move_right' })
+    expect(question.answer).toBe('move_right')
+    expect(question.prompt).toContain('left=0, right=4')
+    expect(question.prompt).toContain('índice 2 (valor 9)')
+    expect(question.options.map((option) => option.id)).toEqual(['move_right', 'move_left', 'found', 'not_found'])
+  })
+
+  it('pregunta por el rango vacío cuando no hay mid', () => {
+    const question = getSearchPrediction(list, 3, { left: 1, mid: null, right: 0, action: 'not_found' })
+    expect(question.answer).toBe('not_found')
+    expect(question.prompt).toContain('left=1, right=0')
   })
 })
