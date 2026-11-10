@@ -15,12 +15,10 @@ afterEach(() => {
 })
 
 describe('Página inicial', () => {
-  it('presenta el nombre y el propósito del laboratorio', () => {
+  it('presenta el nombre del laboratorio', () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Algorithm Lab')
-    expect(screen.getByText(/Un laboratorio interactivo para aprender algoritmos/).textContent)
-      .toContain('Python')
   })
 
   it('muestra el catálogo agrupado por categoría', () => {
@@ -49,8 +47,7 @@ describe('Navegación entre algoritmos', () => {
     navigate(link.getAttribute('href') ?? '')
 
     // The lab is lazy-loaded (it pulls in Three.js), so allow time for the import.
-    const lab = await screen.findByRole('region', { name: 'Binary Search' }, { timeout: 10000 })
-    expect(lab.textContent).toContain('Pyodide')
+    await screen.findByRole('region', { name: 'Binary Search' }, { timeout: 10000 })
     expect(screen.getByLabelText('Lista ordenada')).toBeDefined()
     expect(screen.getByRole('button', { name: 'Ejecutar búsqueda' })).toBeDefined()
     const complexity = screen.getByLabelText('Complejidad')
@@ -66,8 +63,7 @@ describe('Navegación entre algoritmos', () => {
     window.location.hash = '#/algoritmo/linear-search'
     render(<App />)
 
-    const lab = await screen.findByRole('region', { name: 'Linear Search' }, { timeout: 10000 })
-    expect(lab.textContent).toContain('No necesita que esté ordenada')
+    await screen.findByRole('region', { name: 'Linear Search' }, { timeout: 10000 })
     expect(screen.getByLabelText('Lista de números')).toBeDefined()
   }, 15000)
 

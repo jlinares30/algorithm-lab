@@ -15,8 +15,8 @@ export function HomePage() {
           Algorithm Lab
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-300">
-          Un laboratorio interactivo para aprender algoritmos: escribe tu lógica
-          en Python y explora cómo funciona, paso a paso.
+          Laboratorio interactivo para explorar algoritmos: ejecuta lógica real en Python
+          directamente en tu navegador y visualiza cada decisión paso a paso en 2D y 3D.
         </p>
         <p className="mt-4 font-mono text-xs text-slate-400">
           {availableCount} {availableCount === 1 ? 'disponible' : 'disponibles'} · {plannedCount} en preparación
