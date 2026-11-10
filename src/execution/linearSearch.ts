@@ -6,13 +6,14 @@ import type { PythonExecution } from './pythonWorker'
 //   linear_search(numbers, target) -> (index, steps)
 //
 // where each step is a dict:
-//   {"index": i, "action": "compare"}     numbers[i] was checked and differs
+//   {"index": i, "action": "check"}       numbers[i] was checked and differs
 //   {"index": i, "action": "found"}       numbers[i] == target (last step)
 //   {"index": None, "action": "not_found"} the list ended without a match (last step)
 //
-// A "value" key is accepted and ignored: the UI reads values from the input list.
+// Extra keys such as "current" (the value checked) are accepted and ignored:
+// the UI reads values from the input list.
 
-export type LinearSearchAction = 'compare' | 'found' | 'not_found'
+export type LinearSearchAction = 'check' | 'found' | 'not_found'
 
 export interface LinearSearchEvent {
   index: number | null
@@ -25,7 +26,7 @@ export interface LinearSearchResult {
 }
 
 const contractHint =
-  'linear_search debe devolver (índice, steps), donde cada paso es {"index": i, "action": "compare" | "found"} '
+  'linear_search debe devolver (índice, steps), donde cada paso es {"index": i, "action": "check" | "found"} '
   + 'y, si no lo encuentra, el último es {"index": None, "action": "not_found"}.'
 
 // JSON is the boundary between Python and the application; no PyProxy escapes.
@@ -45,7 +46,7 @@ export function decodeLinearSearchResult(json: string, length: number): LinearSe
     const validIndex = Number.isInteger(step?.index) && (step!.index as number) >= 0 && (step!.index as number) < length
     const valid = action === 'not_found'
       ? step!.index === null && isLast
-      : (action === 'compare' || (action === 'found' && isLast)) && validIndex
+      : (action === 'check' || (action === 'found' && isLast)) && validIndex
     if (!valid) {
       throw new Error(`Python devolvió un paso no reconocido (paso ${position + 1}). ${contractHint}`)
     }
@@ -53,7 +54,7 @@ export function decodeLinearSearchResult(json: string, length: number): LinearSe
   })
   const last = decoded[decoded.length - 1]
   const expected = last.action === 'found' ? last.index : -1
-  if (last.action === 'compare' || index !== expected) {
+  if (last.action === 'check' || index !== expected) {
     throw new Error(`El índice devuelto (${index}) no coincide con el último paso. ${contractHint}`)
   }
   return { index: index as number, events: decoded }

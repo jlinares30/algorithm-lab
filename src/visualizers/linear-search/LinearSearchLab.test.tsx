@@ -8,8 +8,8 @@ vi.mock('../../execution/linearSearch', () => ({ executeLinearSearch: vi.fn() })
 const recorded = {
   index: 2,
   events: [
-    { index: 0, action: 'compare' as const },
-    { index: 1, action: 'compare' as const },
+    { index: 0, action: 'check' as const },
+    { index: 1, action: 'check' as const },
     { index: 2, action: 'found' as const },
   ],
 }
@@ -37,7 +37,7 @@ describe('Laboratorio de Linear Search', () => {
     expect(executeLinearSearch).toHaveBeenCalledWith([42, 7, 19, 3], 19)
     expect(await screen.findByText(/Todo está preparado/)).toBeDefined()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Ir al paso 1: compare [0]' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Ir al paso 1: check [0]' }))
     expect(screen.getByText('42 ≠ 19. Se avanza al índice 1.')).toBeDefined()
     expect(screen.getByLabelText('Comparación: 42 ≠ 19')).toBeDefined()
 

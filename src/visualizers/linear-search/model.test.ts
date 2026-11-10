@@ -4,15 +4,15 @@ import { explainLinearEvent, getLinearSnapshot, parseLinearSearchInput } from '.
 
 const numbers = [42, 7, 19, 3]
 const found: LinearSearchEvent[] = [
-  { index: 0, action: 'compare' },
-  { index: 1, action: 'compare' },
+  { index: 0, action: 'check' },
+  { index: 1, action: 'check' },
   { index: 2, action: 'found' },
 ]
 const missing: LinearSearchEvent[] = [
-  { index: 0, action: 'compare' },
-  { index: 1, action: 'compare' },
-  { index: 2, action: 'compare' },
-  { index: 3, action: 'compare' },
+  { index: 0, action: 'check' },
+  { index: 1, action: 'check' },
+  { index: 2, action: 'check' },
+  { index: 3, action: 'check' },
   { index: null, action: 'not_found' },
 ]
 
