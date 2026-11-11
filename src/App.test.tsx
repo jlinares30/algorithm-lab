@@ -77,6 +77,15 @@ describe('Navegación entre algoritmos', () => {
     expect(document.title).toBe('Comparar complejidad · Algorithm Lab')
   })
 
+  it('abre el modo de encontrar errores desde la portada', () => {
+    render(<App />)
+
+    navigate(screen.getByRole('link', { name: /Encuentra el error/ }).getAttribute('href') ?? '')
+
+    expect(screen.getByRole('region', { name: 'Encuentra el error' })).toBeDefined()
+    expect(document.title).toBe('Encuentra el error · Algorithm Lab')
+  })
+
   it('indica cuándo un algoritmo aún está en preparación', () => {
     window.location.hash = '#/algoritmo/merge-sort'
     render(<App />)

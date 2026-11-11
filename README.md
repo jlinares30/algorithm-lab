@@ -159,6 +159,19 @@ no son `not_found`). El gráfico muestra dos casos: objetivo ausente (un valor m
 que todos) y objetivo presente (media de varias búsquedas al azar), en escala lineal
 o logarítmica, con los mismos datos en una tabla.
 
+## Encuentra el error
+
+La página `#/errores` convierte cada archivo de `python/algorithms/searching/variants`
+en un reto: una copia del algoritmo con un fallo puesto a propósito (el formato está en
+el `README.md` de esa carpeta). El visitante elige lista y objetivo, recorre los pasos
+que registró la variante y marca el primero que está mal, o indica que con esos datos
+no falla.
+
+La respuesta sale de comparar dos ejecuciones de Python con la misma entrada: la de la
+variante y la del algoritmo correcto. Si la variante lanza una excepción o no termina,
+la ejecución se corta y se muestran los pasos que llegó a registrar. El nombre del
+archivo y su línea `# Error:` solo se muestran después de responder.
+
 ## Estructura
 
 ```text

@@ -21,7 +21,17 @@ export interface MeasureRequest {
   trials: number
 }
 
-export type WorkerRequest = RunRequest | MeasureRequest
+/** Runs a faulty variant and the correct algorithm on the same input. */
+export interface VariantRequest {
+  kind: 'variant'
+  algorithm: PythonAlgorithm
+  /** Complete source of the variant file. */
+  source: string
+  numbers: number[]
+  target: number
+}
+
+export type WorkerRequest = RunRequest | MeasureRequest | VariantRequest
 
 /** `json` is the algorithm's return value, serialized by Python. */
 export type WorkerResponse =

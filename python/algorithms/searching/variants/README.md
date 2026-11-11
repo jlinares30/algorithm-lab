@@ -37,7 +37,13 @@ Cada archivo debe:
 Los más útiles son los que se ven en la animación con alguna entrada concreta:
 un límite que no se mueve, un elemento que nunca se revisa, un rango que se
 descarta del lado equivocado. Si un fallo puede dejar el algoritmo en un bucle
-sin fin, la interfaz cortará la ejecución pasados unos segundos.
+sin fin o lanzar una excepción, la interfaz corta la ejecución y muestra los
+pasos registrados hasta ese momento (como máximo 300). Para recuperarlos, la lista
+de pasos debe estar en una variable local llamada `steps`.
+
+Con los mismos datos, la interfaz ejecuta también el algoritmo correcto y compara
+los pasos de ambos: el primer paso distinto es la respuesta del reto. Un archivo
+nuevo aparece como reto sin tocar el código de la interfaz.
 
 Estas variantes no entran en las pruebas de `python/tests`, que comprueban
 solo los algoritmos correctos.

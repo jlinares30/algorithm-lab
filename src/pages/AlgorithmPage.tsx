@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { categories, getAlgorithm } from '../catalog/algorithms'
 import type { AlgorithmInfo } from '../catalog/algorithms'
 import { labs } from '../catalog/labs'
-import { compareHref, homeHref } from '../navigation/useHashRoute'
+import { bugHuntHref, compareHref, homeHref } from '../navigation/useHashRoute'
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
@@ -17,7 +17,8 @@ export function PageShell({ children }: { children: ReactNode }) {
             ← Todos los algoritmos
           </a>
           <div className="flex items-center gap-5">
-            <a href={compareHref} className="text-sm text-slate-400 hover:text-slate-100">Comparar</a>
+            <a href={compareHref}className="text-sm text-slate-400 hover:text-slate-100">Comparar</a>
+            <a href={bugHuntHref} className="text-sm text-slate-400 hover:text-slate-100">Errores</a>
             <h1 className="text-sm font-semibold tracking-tight text-emerald-400">Algorithm Lab</h1>
           </div>
         </header>
