@@ -3,11 +3,25 @@
 
 export type PythonAlgorithm = 'binary_search' | 'linear_search'
 
-export interface WorkerRequest {
+export const pythonAlgorithms: PythonAlgorithm[] = ['binary_search', 'linear_search']
+
+/** Runs one algorithm once and returns everything it recorded. */
+export interface RunRequest {
+  kind?: 'run'
   algorithm: PythonAlgorithm
   numbers: number[]
   target: number
 }
+
+/** Runs several algorithms over growing inputs and returns their comparison counts. */
+export interface MeasureRequest {
+  kind: 'measure'
+  algorithms: PythonAlgorithm[]
+  sizes: number[]
+  trials: number
+}
+
+export type WorkerRequest = RunRequest | MeasureRequest
 
 /** `json` is the algorithm's return value, serialized by Python. */
 export type WorkerResponse =

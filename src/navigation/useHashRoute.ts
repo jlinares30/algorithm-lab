@@ -2,12 +2,15 @@ import { useSyncExternalStore } from 'react'
 
 export type Route =
   | { page: 'home' }
+  | { page: 'compare' }
   | { page: 'algorithm'; id: string }
 
 const algorithmPrefix = '#/algoritmo/'
+export const compareHref = '#/comparar'
 
 // Hash routing keeps the app a static site (no server rewrites needed).
 export function parseRoute(hash: string): Route {
+  if (hash === compareHref || hash.startsWith(`${compareHref}/`)) return { page: 'compare' }
   if (hash.startsWith(algorithmPrefix)) {
     const id = decodeURIComponent(hash.slice(algorithmPrefix.length).split(/[/?#]/)[0])
     if (id) return { page: 'algorithm', id }

@@ -3,9 +3,9 @@ import type { ReactNode } from 'react'
 import { categories, getAlgorithm } from '../catalog/algorithms'
 import type { AlgorithmInfo } from '../catalog/algorithms'
 import { labs } from '../catalog/labs'
-import { homeHref } from '../navigation/useHashRoute'
+import { compareHref, homeHref } from '../navigation/useHashRoute'
 
-function Shell({ children }: { children: ReactNode }) {
+export function PageShell({ children }: { children: ReactNode }) {
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-8 text-slate-100 sm:py-12">
       <div className="mx-auto max-w-5xl">
@@ -16,7 +16,10 @@ function Shell({ children }: { children: ReactNode }) {
           >
             ← Todos los algoritmos
           </a>
-          <h1 className="text-sm font-semibold tracking-tight text-emerald-400">Algorithm Lab</h1>
+          <div className="flex items-center gap-5">
+            <a href={compareHref} className="text-sm text-slate-400 hover:text-slate-100">Comparar</a>
+            <h1 className="text-sm font-semibold tracking-tight text-emerald-400">Algorithm Lab</h1>
+          </div>
         </header>
         {children}
       </div>
@@ -53,7 +56,7 @@ export function AlgorithmPage({ id }: { id: string }) {
 
   if (!algorithm) {
     return (
-      <Shell>
+      <PageShell>
         <section className="mt-16 text-center">
           <h2 className="text-2xl font-semibold">Algoritmo no encontrado</h2>
           <p className="mt-3 text-slate-400">
@@ -63,14 +66,14 @@ export function AlgorithmPage({ id }: { id: string }) {
             Ver el catálogo
           </a>
         </section>
-      </Shell>
+      </PageShell>
     )
   }
 
   const Lab = algorithm.status === 'available' ? labs[algorithm.id] : undefined
 
   return (
-    <Shell>
+    <PageShell>
       <ComplexityStrip algorithm={algorithm} />
       {Lab ? (
         <Suspense
@@ -95,6 +98,6 @@ export function AlgorithmPage({ id }: { id: string }) {
           </p>
         </section>
       )}
-    </Shell>
+    </PageShell>
   )
 }

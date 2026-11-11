@@ -151,6 +151,14 @@ La respuesta correcta sale siempre del paso grabado por Python, no de lógica en
 interfaz. Mientras está activo se ocultan la línea de tiempo y el modo 3D, que
 mostrarían los pasos por adelantado.
 
+## Comparar complejidad
+
+La página `#/comparar` ejecuta cada algoritmo disponible con listas de 100 a 1000
+elementos y cuenta las comparaciones que registra su código Python (los pasos que
+no son `not_found`). El gráfico muestra dos casos: objetivo ausente (un valor mayor
+que todos) y objetivo presente (media de varias búsquedas al azar), en escala lineal
+o logarítmica, con los mismos datos en una tabla.
+
 ## Estructura
 
 ```text
@@ -175,6 +183,7 @@ src/
     pythonWorker.ts     # Protocolo y cliente del worker
     binarySearch.ts     # Eventos y decodificador de binary_search
     linearSearch.ts     # Contrato (índice, steps) y decodificador de linear_search
+    measure.ts          # Medición de comparaciones por tamaño de lista
   visualizers/
     linear-search/
       LinearSearchLab.tsx        # Laboratorio: entrada, ejecución y reproducción

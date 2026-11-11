@@ -1,5 +1,6 @@
 import { algorithms, algorithmsIn, categories } from '../catalog/algorithms'
 import { AlgorithmCard } from '../components/AlgorithmCard'
+import { compareHref } from '../navigation/useHashRoute'
 
 export function HomePage() {
   const availableCount = algorithms.filter((algorithm) => algorithm.status === 'available').length
@@ -20,6 +21,11 @@ export function HomePage() {
         </p>
         <p className="mt-4 font-mono text-xs text-slate-400">
           {availableCount} {availableCount === 1 ? 'disponible' : 'disponibles'} · {plannedCount} en preparación
+        </p>
+        <p className="mt-6">
+          <a href={compareHref} className="text-sm font-medium text-emerald-400 hover:text-emerald-300">
+            Comparar complejidad →
+          </a>
         </p>
 
         {categories.map((category) => {

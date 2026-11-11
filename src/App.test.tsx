@@ -67,6 +67,16 @@ describe('Navegación entre algoritmos', () => {
     expect(screen.getByLabelText('Lista de números')).toBeDefined()
   }, 15000)
 
+  it('abre la comparación de complejidad desde la portada', () => {
+    render(<App />)
+
+    navigate(screen.getByRole('link', { name: /Comparar complejidad/ }).getAttribute('href') ?? '')
+
+    expect(screen.getByRole('region', { name: 'Comparar complejidad' })).toBeDefined()
+    expect(screen.getByRole('button', { name: 'Medir' })).toBeDefined()
+    expect(document.title).toBe('Comparar complejidad · Algorithm Lab')
+  })
+
   it('indica cuándo un algoritmo aún está en preparación', () => {
     window.location.hash = '#/algoritmo/merge-sort'
     render(<App />)
