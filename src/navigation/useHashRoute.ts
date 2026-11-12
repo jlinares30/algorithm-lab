@@ -4,16 +4,19 @@ export type Route =
   | { page: 'home' }
   | { page: 'compare' }
   | { page: 'bughunt' }
+  | { page: 'practice' }
   | { page: 'algorithm'; id: string }
 
 const algorithmPrefix = '#/algoritmo/'
 export const compareHref = '#/comparar'
 export const bugHuntHref = '#/errores'
+export const practiceHref = '#/practicar'
 
 // Hash routing keeps the app a static site (no server rewrites needed).
 export function parseRoute(hash: string): Route {
   if (hash === compareHref || hash.startsWith(`${compareHref}/`)) return { page: 'compare' }
   if (hash === bugHuntHref || hash.startsWith(`${bugHuntHref}/`)) return { page: 'bughunt' }
+  if (hash === practiceHref || hash.startsWith(`${practiceHref}/`)) return { page: 'practice' }
   if (hash.startsWith(algorithmPrefix)) {
     const id = decodeURIComponent(hash.slice(algorithmPrefix.length).split(/[/?#]/)[0])
     if (id) return { page: 'algorithm', id }

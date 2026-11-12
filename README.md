@@ -178,6 +178,19 @@ excepción o no termina, la ejecución se corta y se muestran los pasos registra
 `faults.py` es una herramienta, no un algoritmo: funciona con cualquier algoritmo de
 búsqueda del catálogo y sus pruebas están en `python/tests/test_faults.py`.
 
+## Completa el código
+
+La página `#/practicar` oculta al azar entre 1 y 5 líneas del algoritmo (condiciones,
+bucles, asignaciones y `return`; nunca las que registran los pasos) y pide escribirlas
+de memoria. `python/challenges/practice.py` inserta lo escrito en el archivo real y
+ejecuta el resultado junto al original con medio centenar de listas pequeñas:
+
+- Si se comporta igual en todas, la respuesta es correcta, aunque esté escrita de otra
+  forma que la original.
+- Si no, se muestra una de las listas donde falla, con los pasos que registró y el
+  primero que difiere de la versión correcta.
+- Si lo escrito no es Python válido, se indica la línea del error.
+
 ## Estructura
 
 ```text

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { describeOutcome, describeStep, findFault, getFaultySnapshot, makeChallengeData, sameFault } from '../bughunt/model'
+import { describeOutcome, describeStep, explainFault, findFault, getFaultySnapshot, makeChallengeData, sameFault } from '../bughunt/model'
 import type { Fault } from '../bughunt/model'
 import { algorithms } from '../catalog/algorithms'
 import { ArrayVisualization } from '../components/ArrayVisualization'
@@ -19,22 +19,6 @@ const playable = algorithms.flatMap((algorithm) => {
   const python = algorithm.id.replaceAll('-', '_') as PythonAlgorithm
   return algorithm.status === 'available' && pythonAlgorithms.includes(python) ? [{ python, name: algorithm.name }] : []
 })
-
-function explainFault(run: Run, fault: Fault) {
-  if (fault.kind === 'none') {
-    return 'Con estos datos esta versión hace lo mismo que la correcta. El fallo sigue escondido.'
-  }
-  if (fault.kind === 'step') {
-    const correct = run.expected.steps[fault.position - 1]
-    return `El primer paso incorrecto es el ${fault.position}: registró «${describeStep(run.algorithm, run.actual.steps[fault.position - 1])}». `
-      + (correct ? `La versión correcta registra «${describeStep(run.algorithm, correct)}».` : 'La versión correcta ya había terminado.')
-  }
-  const next = run.expected.steps[run.actual.steps.length]
-  return 'Los pasos registrados son correctos, pero el final no. '
-    + (next
-      ? `La versión correcta continúa con «${describeStep(run.algorithm, next)}».`
-      : `La versión correcta devuelve ${run.expected.index}.`)
-}
 
 export function BugHuntPage() {
   const [algorithm, setAlgorithm] = useState<PythonAlgorithm>(playable[0]?.python ?? 'binary_search')
@@ -169,7 +153,7 @@ export function BugHuntPage() {
                 <p className={`font-semibold ${sameFault(answer, fault) ? 'text-emerald-300' : 'text-amber-300'}`}>
                   {sameFault(answer, fault) ? 'Correcto.' : 'No es ahí.'}
                 </p>
-                <p>{explainFault(run, fault)}</p>
+                <p>{explainFault(run.algorithm, run, fault)}</p>
                 {fault.kind === 'none' ? (
                   <button type="button" className="control" onClick={() => start(run.mutation)}>Mismo fallo, otros datos</button>
                 ) : (

@@ -1,6 +1,6 @@
 import { algorithms, algorithmsIn, categories } from '../catalog/algorithms'
 import { AlgorithmCard } from '../components/AlgorithmCard'
-import { bugHuntHref, compareHref } from '../navigation/useHashRoute'
+import { bugHuntHref, compareHref, practiceHref } from '../navigation/useHashRoute'
 
 export function HomePage() {
   const availableCount = algorithms.filter((algorithm) => algorithm.status === 'available').length
@@ -28,6 +28,9 @@ export function HomePage() {
           </a>
           <a href={bugHuntHref} className="text-sm font-medium text-emerald-400 hover:text-emerald-300">
             Encuentra el error →
+          </a>
+          <a href={practiceHref} className="text-sm font-medium text-emerald-400 hover:text-emerald-300">
+            Completa el código →
           </a>
         </p>
 

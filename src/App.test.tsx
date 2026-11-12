@@ -86,6 +86,15 @@ describe('Navegación entre algoritmos', () => {
     expect(document.title).toBe('Encuentra el error · Algorithm Lab')
   })
 
+  it('abre la práctica de completar código desde la portada', () => {
+    render(<App />)
+
+    navigate(screen.getByRole('link', { name: /Completa el código/ }).getAttribute('href') ?? '')
+
+    expect(screen.getByRole('region', { name: 'Completa el código' })).toBeDefined()
+    expect(document.title).toBe('Completa el código · Algorithm Lab')
+  })
+
   it('indica cuándo un algoritmo aún está en preparación', () => {
     window.location.hash = '#/algoritmo/merge-sort'
     render(<App />)

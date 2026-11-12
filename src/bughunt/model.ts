@@ -82,7 +82,7 @@ export function getFaultySnapshot(algorithm: PythonAlgorithm, numbers: number[],
 }
 
 /** Algorithms that only work on a sorted list. */
-const needsSorted: PythonAlgorithm[] = ['binary_search']
+export const needsSorted: PythonAlgorithm[] = ['binary_search']
 
 // Input data only: a random list and the targets Python may choose from
 // (every value in the list, plus values around and between them that are absent).
@@ -95,4 +95,21 @@ export function makeChallengeData(algorithm: PythonAlgorithm, random: () => numb
   if (sorted) numbers.sort((a, b) => a - b)
   const absent = [0, 99, ...numbers.map((value) => value + 1)].filter((value) => !pool.has(value))
   return { numbers, targets: [...numbers, ...absent], sorted, seed: Math.floor(random() * 2 ** 31) }
+}
+
+/** What went wrong, in terms of the two recorded runs. */
+export function explainFault(algorithm: PythonAlgorithm, run: Pick<ChallengeRun, 'expected' | 'actual'>, fault: Fault) {
+  if (fault.kind === 'none') {
+    return 'Con estos datos esta versión hace lo mismo que la correcta. El fallo sigue escondido.'
+  }
+  if (fault.kind === 'step') {
+    const correct = run.expected.steps[fault.position - 1]
+    return `El primer paso incorrecto es el ${fault.position}: registró «${describeStep(algorithm, run.actual.steps[fault.position - 1])}». `
+      + (correct ? `La versión correcta registra «${describeStep(algorithm, correct)}».` : 'La versión correcta ya había terminado.')
+  }
+  const next = run.expected.steps[run.actual.steps.length]
+  return 'Los pasos registrados son correctos, pero el final no. '
+    + (next
+      ? `La versión correcta continúa con «${describeStep(algorithm, next)}».`
+      : `La versión correcta devuelve ${run.expected.index}.`)
 }

@@ -44,7 +44,26 @@ export interface ChallengeRequest {
   mutation?: Mutation
 }
 
-export type WorkerRequest = RunRequest | MeasureRequest | ChallengeRequest
+/** Hides some lines of an algorithm for the learner to write. */
+export interface ExerciseRequest {
+  kind: 'exercise'
+  algorithm: PythonAlgorithm
+  seed: number
+  /** How many lines to hide. */
+  count: number
+}
+
+/** Runs the algorithm completed with the learner's lines against the original. */
+export interface CheckRequest {
+  kind: 'check'
+  algorithm: PythonAlgorithm
+  /** Text written for each hidden line, by line number. */
+  answers: Record<number, string>
+  sorted: boolean
+  seed: number
+}
+
+export type WorkerRequest = RunRequest | MeasureRequest | ChallengeRequest | ExerciseRequest | CheckRequest
 
 /** `json` is the algorithm's return value, serialized by Python. */
 export type WorkerResponse =

@@ -168,11 +168,11 @@ def mutations(source, name):
     return found
 
 
-def _same(expected, outcome):
+def same(expected, outcome):
     return outcome["status"] == "finished" and outcome["index"] == expected[0] and outcome["steps"] == _clean(expected[1])
 
 
-def _battery(rng, sorted_input):
+def battery(rng, sorted_input):
     """Small inputs used to tell whether a change alters the behaviour at all."""
     cases = []
     for size in range(9):
@@ -200,12 +200,12 @@ def build_challenge(source, request):
     mutation = request.get("mutation")
     faulty = load(mutation["source"], name) if mutation else None
     if faulty is None:
-        battery = _battery(rng, request["sorted"])
+        cases = battery(rng, request["sorted"])
         candidates = mutations(source, name)
         rng.shuffle(candidates)
         for candidate in candidates:
             function = load(candidate["source"], name)
-            if function and any(not _same(correct(list(n), t), run(function, n, t)) for n, t in battery):
+            if function and any(not same(correct(list(n), t), run(function, n, t)) for n, t in cases):
                 mutation, faulty = candidate, function
                 break
     if faulty is None:
@@ -213,7 +213,7 @@ def build_challenge(source, request):
 
     # Most challenges use a target that exposes the fault; a few do not, so
     # «con estos datos no falla» stays a real answer.
-    exposing = [t for t in request["targets"] if not _same(correct(list(numbers), t), run(faulty, numbers, t))]
+    exposing = [t for t in request["targets"] if not same(correct(list(numbers), t), run(faulty, numbers, t))]
     hidden = [t for t in request["targets"] if t not in exposing]
     pool = exposing if exposing and (not hidden or rng.random() < 0.85) else hidden
     target = rng.choice(pool)

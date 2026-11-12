@@ -1,6 +1,7 @@
 import binarySearchSource from '../../python/algorithms/searching/binary_search.py?raw'
 import linearSearchSource from '../../python/algorithms/searching/linear_search.py?raw'
 import faultsSource from '../../python/challenges/faults.py?raw'
+import practiceSource from '../../python/challenges/practice.py?raw'
 import type { PythonAlgorithm, WorkerRequest, WorkerResponse } from './pythonWorker'
 
 interface PythonRuntime {
@@ -62,15 +63,37 @@ for _name, _function in _functions.items():
 json.dumps(_report)
 `
 
+// The tooling files are registered as modules so they can import each other
+// exactly as they do under pytest.
+const loadTooling = `
+import sys
+import types
+
+def _module(name, source):
+    module = types.ModuleType(name)
+    sys.modules[name] = module
+    exec(compile(source, name.split(".")[-1] + ".py", "exec"), module.__dict__)
+    return module
+
+_module("challenges", "")
+_faults = _module("challenges.faults", _faults_source)
+_practice = _module("challenges.practice", _practice_source)
+_source = json.loads(_sources_json)[_request["algorithm"]]
+`
+
 // «Encuentra el error»: the tooling in python/challenges/faults.py changes one
 // thing in the correct algorithm and runs both copies on the same input.
 const challenge = `${loadAlgorithms}
-_tooling = {"__name__": "algorithm_lab_faults"}
-exec(compile(_faults_source, "faults.py", "exec"), _tooling)
-json.dumps(
-    _tooling["build_challenge"](json.loads(_sources_json)[_request["algorithm"]], _request),
-    default=str,
-)
+${loadTooling}
+json.dumps(_faults.build_challenge(_source, _request), default=str)
+`
+
+// «Completa el código»: python/challenges/practice.py hides lines of the
+// algorithm and checks the lines written in their place.
+const practice = `${loadAlgorithms}
+${loadTooling}
+_action = _practice.build_exercise if _request["kind"] == "exercise" else _practice.check_exercise
+json.dumps(_action(_source, _request), default=str)
 `
 
 // Module workers keep both WebAssembly initialization and Python off the UI thread.
@@ -90,7 +113,10 @@ self.onmessage = async ({ data }: MessageEvent<WorkerRequest>) => {
     python.globals.set('_sources_json', JSON.stringify(selected))
     python.globals.set('_request_json', JSON.stringify(data))
     python.globals.set('_faults_source', faultsSource)
-    const program = data.kind === 'measure' ? measure : data.kind === 'challenge' ? challenge : runOnce
+    python.globals.set('_practice_source', practiceSource)
+    const program = data.kind === 'measure' ? measure
+      : data.kind === 'challenge' ? challenge
+        : data.kind === 'exercise' || data.kind === 'check' ? practice : runOnce
     const json = await python.runPythonAsync(program)
     self.postMessage({ ok: true, json } satisfies WorkerResponse)
   } catch (error) {

@@ -36,6 +36,7 @@ describe('Rutas por hash', () => {
     expect(parseRoute('#/algoritmo/')).toEqual({ page: 'home' })
     expect(parseRoute('#/comparar')).toEqual({ page: 'compare' })
     expect(parseRoute('#/errores')).toEqual({ page: 'bughunt' })
+    expect(parseRoute('#/practicar')).toEqual({ page: 'practice' })
     expect(parseRoute('#/algoritmo/binary-search')).toEqual({ page: 'algorithm', id: 'binary-search' })
     expect(parseRoute('#/algoritmo/binary-search/extra')).toEqual({ page: 'algorithm', id: 'binary-search' })
   })
