@@ -2,6 +2,8 @@ import { algorithms, algorithmsIn, categories } from '../catalog/algorithms'
 import { AlgorithmCard } from '../components/AlgorithmCard'
 import { bugHuntHref, compareHref, practiceHref } from '../navigation/useHashRoute'
 
+export const repositoryUrl = 'https://github.com/jlinares30/algorithm-lab'
+
 export function HomePage() {
   const availableCount = algorithms.filter((algorithm) => algorithm.status === 'available').length
   const plannedCount = algorithms.length - availableCount
@@ -19,8 +21,13 @@ export function HomePage() {
           Laboratorio interactivo para explorar algoritmos: ejecuta lógica real en Python
           directamente en tu navegador y visualiza cada decisión paso a paso en 2D y 3D.
         </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-slate-400">
+          Es un proyecto personal de aprendizaje: cada algoritmo está escrito a mano en Python y la
+          aplicación ejecuta ese mismo código, sin versiones aparte para la visualización. Se amplía
+          a medida que estudio algoritmos nuevos.
+        </p>
         <p className="mt-4 font-mono text-xs text-slate-400">
-          {availableCount} {availableCount === 1 ? 'disponible' : 'disponibles'} · {plannedCount} en preparación
+          {availableCount} {availableCount === 1 ? 'disponible' : 'disponibles'} · {plannedCount} en la hoja de ruta
         </p>
         <p className="mt-6 flex flex-wrap gap-x-8 gap-y-2">
           <a href={compareHref} className="text-sm font-medium text-emerald-400 hover:text-emerald-300">
@@ -59,6 +66,13 @@ export function HomePage() {
             </section>
           )
         })}
+
+        <footer className="mt-16 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-6 text-sm text-slate-400">
+          <p>Python real en el navegador con Pyodide. Sin cuentas ni datos guardados en servidores.</p>
+          <a href={repositoryUrl} target="_blank" rel="noreferrer" className="font-medium text-emerald-400 hover:text-emerald-300">
+            Código en GitHub →
+          </a>
+        </footer>
       </div>
     </main>
   )

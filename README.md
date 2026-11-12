@@ -2,7 +2,8 @@
 
 Laboratorio web interactivo para aprender, experimentar y visualizar algoritmos.
 La interfaz usa React + TypeScript + Vite y Tailwind CSS. La lógica de los
-algoritmos se escribirá manualmente en Python como parte del aprendizaje.
+algoritmos está escrita a mano en Python como parte del aprendizaje, y la aplicación
+ejecuta ese mismo código en el navegador.
 
 ## Requisitos
 
@@ -265,6 +266,12 @@ compartidas para reutilizarlas con otros algoritmos. Las animaciones de esta eta
 limitan a comparación, descarte y zoom de Binary Search.
 
 No hay backend, autenticación ni base de datos.
+
+## Despliegue
+
+La aplicación es estática: `npm run build` genera `dist/`. En Vercel basta con importar el
+repositorio; detecta Vite y no necesita configuración. Las rutas usan `#`, así que no hacen
+falta reglas de redirección. Pyodide se descarga desde jsDelivr al ejecutar un algoritmo.
 
 ### Registro de pasos plegado
 

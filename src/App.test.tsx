@@ -21,6 +21,13 @@ describe('Página inicial', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Algorithm Lab')
   })
 
+  it('explica qué es el proyecto y enlaza a su código', () => {
+    render(<App />)
+
+    expect(screen.getByText(/proyecto personal de aprendizaje/)).toBeDefined()
+    expect(screen.getByRole('link', { name: /Código en GitHub/ }).getAttribute('href')).toMatch(/^https:\/\/github\.com\//)
+  })
+
   it('muestra el catálogo agrupado por categoría', () => {
     render(<App />)
 
@@ -29,7 +36,7 @@ describe('Página inicial', () => {
     expect(within(searching).getByRole('link', { name: 'Abrir Binary Search' })).toBeDefined()
     expect(within(searching).getByRole('link', { name: 'Abrir Linear Search' })).toBeDefined()
     expect(within(sorting).getByRole('article', { name: /Merge Sort \(próximamente\)/ })).toBeDefined()
-    expect(screen.getByText(/2 disponibles · \d+ en preparación/)).toBeDefined()
+    expect(screen.getByText(/2 disponibles · \d+ en la hoja de ruta/)).toBeDefined()
   })
 
   it('no carga ningún laboratorio en la portada', () => {

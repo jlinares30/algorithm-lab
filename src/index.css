@@ -398,4 +398,6 @@ body {
   background: color-mix(in srgb, var(--code-fg) 7%, var(--code-bg));
   color: var(--code-fg);
   font: inherit;
+  /* Fits a phone without scrolling the listing sideways to type. */
+  width: max(18ch, min(56ch, calc(100vw - 14rem)));
 }

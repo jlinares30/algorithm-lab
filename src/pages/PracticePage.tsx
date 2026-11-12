@@ -186,7 +186,7 @@ export function PracticePage() {
                     ) : line.blank ? (
                       <>
                         <input
-                          className="code-input w-[56ch] max-w-full"
+                          className="code-input"
                           type="text"
                           aria-label={`Línea ${line.number}`}
                           autoComplete="off"
