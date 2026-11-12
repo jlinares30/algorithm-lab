@@ -7,6 +7,13 @@ import type { IndexRange } from './animation3d'
 import { getElement3DTarget } from './animation3d'
 import { createFaceLabelTexture, createFloatingBadgeTexture } from './badgeTexture'
 
+// Both label textures are square, so they are drawn on square surfaces:
+// any other proportion stretches the text.
+const BADGE_SIZE = 1.2
+// Just ahead of the bars' front faces, so a neighbour in the same row never
+// cuts the badge, while bars nearer to the camera still cover it.
+const BADGE_DEPTH = 0.45
+
 interface Props {
   index: number
   value: number
@@ -161,7 +168,7 @@ export function ArrayBlock3D({
     const sprite = spriteRef.current
     if (sprite) {
       sprite.position.y = mesh.position.y + height / 2 + (pointers.length > 0 ? 0.95 : 0.75)
-      sprite.position.z = mesh.position.z
+      sprite.position.z = mesh.position.z + BADGE_DEPTH
     }
   })
 
@@ -191,7 +198,7 @@ export function ArrayBlock3D({
 
         {/* Front-face value and index engraved directly onto the 3D bar */}
         <mesh position={[0, 0, 0.435]}>
-          <planeGeometry args={[0.72, Math.min(0.72, height * 0.75)]} />
+          <planeGeometry args={[Math.min(0.72, height * 0.75), Math.min(0.72, height * 0.75)]} />
           <meshBasicMaterial
             map={faceLabelTexture}
             transparent
@@ -205,8 +212,8 @@ export function ArrayBlock3D({
       {(isMid || isLeft || isRight || isSelected || showLabel || hovered) && (
         <sprite
           ref={spriteRef}
-          position={[0, height + (pointers.length > 0 ? 0.95 : 0.75), 0]}
-          scale={[1.25, pointers.length > 0 ? 1.05 : 0.78, 1]}
+          position={[0, height + (pointers.length > 0 ? 0.95 : 0.75), BADGE_DEPTH]}
+          scale={[BADGE_SIZE, BADGE_SIZE, 1]}
           renderOrder={999}
           onClick={(e) => {
             e.stopPropagation()
@@ -220,7 +227,6 @@ export function ArrayBlock3D({
         >
           <spriteMaterial
             map={floatingBadgeTexture}
-            depthTest={false}
             depthWrite={false}
             transparent
           />
