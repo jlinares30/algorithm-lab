@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { decodeChallengeRun } from '../execution/challenge'
 import type { ChallengeRun, RawStep } from '../execution/challenge'
-import { describeStep, findFault, getFaultySnapshot, makeChallengeData } from './model'
+import { condenseEndless, describeStep, findFault, getFaultySnapshot, makeChallengeData } from './model'
 
 // Steps as Python would record them; no search is computed here.
 const correct: RawStep[] = [
@@ -44,6 +44,37 @@ describe('Localizar el fallo', () => {
 })
 
 describe('Proyección de una ejecución con fallo', () => {
+  it('resume una ejecución sin fin en dos vueltas de lo que repite, sin mover el fallo', () => {
+    const stuck = { left: 3, mid: 3, right: 3, action: 'move_right' }
+    const [first, second] = [{ left: 0, mid: 2, right: 4, action: 'move_right' }, { left: 2, mid: 3, right: 4, action: 'move_left' }]
+    const run = {
+      expected: { index: -1, steps: [first, { left: 3, mid: 3, right: 4, action: 'move_left' }] },
+      actual: { status: 'endless' as const, index: null, steps: [first, second, ...Array.from({ length: 298 }, () => ({ ...stuck }))], message: null },
+    }
+    const condensed = condenseEndless('binary_search', run)
+
+    expect(condensed.actual.steps).toEqual([first, second, stuck, stuck])
+    expect(condensed.actual.status).toBe('endless')
+    expect(findFault('binary_search', condensed)).toEqual(findFault('binary_search', run))
+  })
+
+  it('resume también cuando alterna entre varios pasos', () => {
+    const [a, b] = [{ left: 1, mid: 1, right: 2, action: 'move_right' }, { left: 1, mid: 2, right: 2, action: 'move_left' }]
+    const steps = Array.from({ length: 300 }, (_, index) => (index % 2 === 0 ? a : b))
+    const run = { expected: { index: 1, steps: [a] }, actual: { status: 'endless' as const, index: null, steps, message: null } }
+
+    expect(condenseEndless('binary_search', run).actual.steps).toEqual([a, b, a, b])
+  })
+
+  it('no toca una ejecución que termina ni una sin fin que no se repite', () => {
+    const growing = Array.from({ length: 300 }, (_, index) => ({ index, action: 'check' }))
+    const endless = { expected: { index: -1, steps: [] }, actual: { status: 'endless' as const, index: null, steps: growing, message: null } }
+    const finished = { expected: { index: -1, steps: [] }, actual: { status: 'finished' as const, index: -1, steps: growing.map(() => growing[0]), message: null } }
+
+    expect(condenseEndless('linear_search', endless)).toBe(endless)
+    expect(condenseEndless('linear_search', finished)).toBe(finished)
+  })
+
   it('describe el paso tal como se registró', () => {
     expect(describeStep('binary_search', { left: 0, mid: null, action: 'x' })).toBe('left 0 · mid — · right (falta) · action x')
   })

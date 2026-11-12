@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from challenges.faults import build_challenge, load, mutations, run
+from challenges.faults import MAX_STEPS, build_challenge, load, mutations, run
 
 SEARCHING = Path(__file__).resolve().parents[1] / "algorithms" / "searching"
 ALGORITHMS = [("binary_search", True), ("linear_search", False)]
@@ -121,3 +121,24 @@ def test_crash_is_reported_with_the_steps_recorded_so_far():
     assert outcome["status"] == "crashed"
     assert outcome["message"].startswith("IndexError")
     assert outcome["steps"] == [{"action": "check", "index": 0}]
+
+
+def test_recursion_without_end_counts_as_endless_and_keeps_its_steps():
+    # Not an algorithm: a function that only calls itself again.
+    def again(numbers, target, steps=None):
+        steps = [] if steps is None else steps
+        steps.append({"action": "again"})
+        return again(numbers, target, steps)
+
+    outcome = run(again, [1, 2, 3], 2)
+
+    assert outcome["status"] == "endless"
+    assert outcome["steps"] == [{"action": "again"}] * MAX_STEPS
+
+
+@pytest.mark.parametrize(("name", "sorted_input"), ALGORITHMS)
+def test_most_challenges_have_several_steps_to_choose_from(name, sorted_input):
+    runs = [build_challenge(source_of(name), request_for(name, sorted_input, seed))["actual"] for seed in range(60)]
+    single = sum(len(actual["steps"]) < 2 for actual in runs)
+
+    assert single <= 60 * 0.3

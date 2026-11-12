@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { describeOutcome, describeStep, explainFault, findFault, getFaultySnapshot, makeChallengeData, sameFault } from '../bughunt/model'
+import { condenseEndless, describeOutcome, describeStep, explainFault, findFault, getFaultySnapshot, makeChallengeData, sameFault } from '../bughunt/model'
 import type { Fault } from '../bughunt/model'
 import { algorithms } from '../catalog/algorithms'
 import { useCodeTheme } from '../code/theme'
@@ -50,7 +50,7 @@ export function BugHuntPage() {
     try {
       const result = await current.result
       if (execution.current === current) {
-        setRun({ ...result, algorithm, numbers: data.numbers })
+        setRun({ ...condenseEndless(algorithm, result), algorithm, numbers: data.numbers })
         setPosition(1)
       }
     } catch (error) {
