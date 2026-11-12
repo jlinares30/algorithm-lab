@@ -43,6 +43,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup()
+  localStorage.clear()
   vi.clearAllMocks()
 })
 
@@ -129,6 +130,29 @@ describe('Completa el código', () => {
 
     expect(screen.getByText('LÍNEA OCULTA DOS')).toBeDefined()
     expect(screen.getByText('LÍNEA OCULTA CUATRO')).toBeDefined()
+  })
+})
+
+describe('Tema del código', () => {
+  it('colorea el código con el tema elegido y lo recuerda', async () => {
+    await start()
+    const code = screen.getByRole('list', { name: 'Código del algoritmo' })
+    expect(code.getAttribute('data-code-theme')).toBe('noche')
+    expect(code.querySelector('.tok-keyword')?.textContent).toBe('def')
+
+    fireEvent.change(screen.getByLabelText('Tema del código'), { target: { value: 'claro' } })
+    expect(code.getAttribute('data-code-theme')).toBe('claro')
+
+    cleanup()
+    await start()
+    expect(screen.getByRole('list', { name: 'Código del algoritmo' }).getAttribute('data-code-theme')).toBe('claro')
+  })
+
+  it('ignora un tema guardado que ya no existe', async () => {
+    localStorage.setItem('algorithm-lab:code-theme', 'desconocido')
+    await start()
+
+    expect(screen.getByRole('list', { name: 'Código del algoritmo' }).getAttribute('data-code-theme')).toBe('noche')
   })
 })
 

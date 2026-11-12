@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { describeOutcome, describeStep, explainFault, findFault, getFaultySnapshot, needsSorted } from '../bughunt/model'
 import { algorithms } from '../catalog/algorithms'
+import { useCodeTheme } from '../code/theme'
 import { ArrayVisualization } from '../components/ArrayVisualization'
+import { CodeText, CodeThemeSelect } from '../components/CodeText'
 import { checkExercise, createExercise } from '../execution/practice'
 import type { CheckResult, Exercise } from '../execution/practice'
 import { pythonAlgorithms } from '../execution/pythonWorker'
@@ -65,6 +67,7 @@ export function PracticePage() {
   const [revealed, setRevealed] = useState(false)
   const [loading, setLoading] = useState<'exercise' | 'check' | null>(null)
   const [error, setError] = useState('')
+  const [codeTheme, setCodeTheme] = useCodeTheme()
   const execution = useRef<PythonExecution<unknown> | null>(null)
 
   useEffect(() => () => {
@@ -155,6 +158,9 @@ export function PracticePage() {
             {loading === 'exercise' ? 'Preparando…' : 'Nuevo ejercicio'}
           </button>
           {loading && <button className="control min-h-9" type="button" onClick={cancel}>Cancelar</button>}
+          <div className="sm:ml-auto">
+            <CodeThemeSelect value={codeTheme} onChange={setCodeTheme} />
+          </div>
         </div>
 
         {loading && <p role="status" className="mb-6 text-sm text-slate-300">Cargando Pyodide. Puede tardar unos segundos.</p>}
@@ -162,15 +168,15 @@ export function PracticePage() {
 
         {exercise && (
           <form onSubmit={check} className="space-y-5">
-            <ol aria-label="Código del algoritmo" className="overflow-x-auto rounded-xl bg-slate-950 py-3 font-mono text-xs leading-6">
+            <ol aria-label="Código del algoritmo" data-code-theme={codeTheme} className="overflow-x-auto rounded-xl border border-slate-800 py-3 font-mono">
               {exercise.lines.map((line) => (
-                <li key={line.number} className="flex min-w-max items-start gap-4 px-4" data-blank={line.blank}>
-                  <span aria-hidden="true" className="w-6 shrink-0 select-none text-right text-slate-600">{line.number}</span>
+                <li key={line.number} className={`flex min-w-max items-start gap-4 px-4 ${line.blank ? 'code-blank py-1' : ''}`} data-blank={line.blank}>
+                  <span aria-hidden="true" className="code-muted w-6 shrink-0 select-none text-right">{line.number}</span>
                   <div style={{ paddingLeft: `${line.indent}ch` }} className="flex-1">
                     {line.blank ? (
                       <>
                         <input
-                          className="w-[56ch] max-w-full rounded border border-sky-700 bg-slate-900 px-2 py-0.5 text-slate-100"
+                          className="code-input w-[56ch] max-w-full"
                           type="text"
                           aria-label={`Línea ${line.number}`}
                           autoComplete="off"
@@ -183,10 +189,10 @@ export function PracticePage() {
                             setResult(null)
                           }}
                         />
-                        {revealed && <span className="block whitespace-pre text-emerald-300">{line.text}</span>}
+                        {revealed && <span className="block whitespace-pre"><CodeText text={line.text} /></span>}
                       </>
                     ) : (
-                      <span className="whitespace-pre text-slate-300">{line.text || ' '}</span>
+                      <span className="whitespace-pre">{line.text ? <CodeText text={line.text} /> : ' '}</span>
                     )}
                   </div>
                 </li>

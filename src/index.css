@@ -310,3 +310,92 @@ body {
     animation: none !important;
   }
 }
+
+/* Code listings. Each theme sets the same variables; the choice is the user's. */
+[data-code-theme] {
+  background: var(--code-bg);
+  color: var(--code-fg);
+  font-size: 0.875rem;
+  line-height: 1.75;
+  tab-size: 4;
+}
+
+[data-code-theme='noche'] {
+  --code-bg: #020617;
+  --code-fg: #e2e8f0;
+  --code-muted: #64748b;
+  --code-keyword: #c4a1ff;
+  --code-builtin: #5eead4;
+  --code-function: #7dd3fc;
+  --code-string: #86efac;
+  --code-number: #fdba74;
+  --code-comment: #8a99ad;
+  --code-operator: #a5b4c8;
+  --code-removed: #fda4af;
+}
+
+[data-code-theme='calido'] {
+  --code-bg: #1f1b16;
+  --code-fg: #ebdbb2;
+  --code-muted: #8a7d6f;
+  --code-keyword: #f38d70;
+  --code-builtin: #8ec07c;
+  --code-function: #fabd2f;
+  --code-string: #b8bb26;
+  --code-number: #d3869b;
+  --code-comment: #a89984;
+  --code-operator: #d5c4a1;
+  --code-removed: #fb8a7a;
+}
+
+[data-code-theme='claro'] {
+  --code-bg: #f8fafc;
+  --code-fg: #1e293b;
+  --code-muted: #64748b;
+  --code-keyword: #7c3aed;
+  --code-builtin: #0f766e;
+  --code-function: #0369a1;
+  --code-string: #15803d;
+  --code-number: #b45309;
+  --code-comment: #64748b;
+  --code-operator: #475569;
+  --code-removed: #be123c;
+}
+
+[data-code-theme='contraste'] {
+  --code-bg: #000000;
+  --code-fg: #ffffff;
+  --code-muted: #b0b0b0;
+  --code-keyword: #ffd700;
+  --code-builtin: #7ff0e0;
+  --code-function: #6cc7ff;
+  --code-string: #7cfc9a;
+  --code-number: #ffa366;
+  --code-comment: #c8c8c8;
+  --code-operator: #ffffff;
+  --code-removed: #ff8a9a;
+}
+
+.tok-keyword { color: var(--code-keyword); font-weight: 600; }
+.tok-builtin { color: var(--code-builtin); }
+.tok-function { color: var(--code-function); }
+.tok-string { color: var(--code-string); }
+.tok-number { color: var(--code-number); }
+.tok-comment { color: var(--code-comment); font-style: italic; }
+.tok-operator { color: var(--code-operator); }
+
+.code-muted { color: var(--code-muted); }
+.code-removed { color: var(--code-removed); }
+
+.code-blank {
+  background: color-mix(in srgb, var(--code-function) 9%, transparent);
+}
+
+.code-input {
+  border: 1px solid color-mix(in srgb, var(--code-function) 70%, var(--code-bg));
+  border-radius: 0.25rem;
+  padding: 0 0.5rem;
+  background: color-mix(in srgb, var(--code-fg) 7%, var(--code-bg));
+  color: var(--code-fg);
+  font: inherit;
+}

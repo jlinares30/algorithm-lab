@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { describeOutcome, describeStep, explainFault, findFault, getFaultySnapshot, makeChallengeData, sameFault } from '../bughunt/model'
 import type { Fault } from '../bughunt/model'
 import { algorithms } from '../catalog/algorithms'
+import { useCodeTheme } from '../code/theme'
 import { ArrayVisualization } from '../components/ArrayVisualization'
+import { CodeText, CodeThemeSelect } from '../components/CodeText'
 import { runChallenge } from '../execution/challenge'
 import type { ChallengeRun } from '../execution/challenge'
 import { pythonAlgorithms } from '../execution/pythonWorker'
@@ -27,6 +29,7 @@ export function BugHuntPage() {
   const [answer, setAnswer] = useState<Fault | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [codeTheme, setCodeTheme] = useCodeTheme()
   const execution = useRef<PythonExecution<ChallengeRun> | null>(null)
 
   useEffect(() => () => {
@@ -158,10 +161,13 @@ export function BugHuntPage() {
                   <button type="button" className="control" onClick={() => start(run.mutation)}>Mismo fallo, otros datos</button>
                 ) : (
                   <div>
-                    <p className="text-slate-400">El cambio, en la línea {run.mutation.line}:</p>
-                    <pre className="mt-2 overflow-x-auto rounded-lg bg-slate-950 p-3 font-mono text-xs leading-relaxed">
-                      <span className="block text-slate-400">correcto  {run.mutation.original}</span>
-                      <span className="block text-rose-300">con fallo {run.mutation.mutated}</span>
+                    <div className="flex flex-wrap items-end justify-between gap-3">
+                      <p className="text-slate-400">El cambio, en la línea {run.mutation.line}:</p>
+                      <CodeThemeSelect value={codeTheme} onChange={setCodeTheme} />
+                    </div>
+                    <pre data-code-theme={codeTheme} className="mt-2 overflow-x-auto rounded-lg border border-slate-800 p-3 font-mono">
+                      <span className="block"><span className="code-muted">correcto  </span><CodeText text={run.mutation.original} /></span>
+                      <span className="block"><span className="code-removed">con fallo </span><CodeText text={run.mutation.mutated} /></span>
                     </pre>
                   </div>
                 )}

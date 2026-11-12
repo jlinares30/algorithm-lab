@@ -265,3 +265,9 @@ compartidas para reutilizarlas con otros algoritmos. Las animaciones de esta eta
 limitan a comparación, descarte y zoom de Binary Search.
 
 No hay backend, autenticación ni base de datos.
+
+### Tema del código
+
+El código se muestra con resaltado de sintaxis (`src/code/highlight.ts`, sin dependencias)
+y cuatro temas a elegir: Noche, Cálido, Claro y Alto contraste. La elección se guarda
+solo en el navegador (`localStorage`).
