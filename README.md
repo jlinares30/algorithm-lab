@@ -161,16 +161,22 @@ o logarítmica, con los mismos datos en una tabla.
 
 ## Encuentra el error
 
-La página `#/errores` convierte cada archivo de `python/algorithms/searching/variants`
-en un reto: una copia del algoritmo con un fallo puesto a propósito (el formato está en
-el `README.md` de esa carpeta). El visitante elige lista y objetivo, recorre los pasos
-que registró la variante y marca el primero que está mal, o indica que con esos datos
-no falla.
+La página `#/errores` genera un reto nuevo cada vez. Al pulsar **Nuevo reto**:
 
-La respuesta sale de comparar dos ejecuciones de Python con la misma entrada: la de la
-variante y la del algoritmo correcto. Si la variante lanza una excepción o no termina,
-la ejecución se corta y se muestran los pasos que llegó a registrar. El nombre del
-archivo y su línea `# Error:` solo se muestran después de responder.
+1. `python/challenges/faults.py` toma el archivo real del algoritmo y le cambia una
+   sola cosa al azar: una comparación (`<` por `<=`), un `+1` o `-1`, un valor
+   inicial o los límites de un bucle. Los pasos que registra el algoritmo no se tocan.
+2. Descarta los cambios que no alteran el comportamiento, probando cada candidato
+   con varias listas pequeñas.
+3. Ejecuta la copia cambiada y el algoritmo original con una lista aleatoria.
+
+El visitante recorre los pasos de la copia y marca el primero que está mal, o indica
+que con esos datos no falla. La respuesta sale de comparar las dos ejecuciones; al
+responder se muestra la línea original junto a la cambiada. Si la copia lanza una
+excepción o no termina, la ejecución se corta y se muestran los pasos registrados.
+
+`faults.py` es una herramienta, no un algoritmo: funciona con cualquier algoritmo de
+búsqueda del catálogo y sus pruebas están en `python/tests/test_faults.py`.
 
 ## Estructura
 

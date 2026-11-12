@@ -21,17 +21,30 @@ export interface MeasureRequest {
   trials: number
 }
 
-/** Runs a faulty variant and the correct algorithm on the same input. */
-export interface VariantRequest {
-  kind: 'variant'
-  algorithm: PythonAlgorithm
-  /** Complete source of the variant file. */
+/** One change made to an algorithm's source to create a challenge. */
+export interface Mutation {
+  line: number
+  original: string
+  mutated: string
+  /** Complete source of the changed copy. */
   source: string
-  numbers: number[]
-  target: number
 }
 
-export type WorkerRequest = RunRequest | MeasureRequest | VariantRequest
+/** Changes one thing in an algorithm and runs it next to the original. */
+export interface ChallengeRequest {
+  kind: 'challenge'
+  algorithm: PythonAlgorithm
+  numbers: number[]
+  /** Candidate targets; Python picks one. */
+  targets: number[]
+  /** Whether the algorithm needs a sorted list. */
+  sorted: boolean
+  seed: number
+  /** Reuses a previous change instead of picking a new one. */
+  mutation?: Mutation
+}
+
+export type WorkerRequest = RunRequest | MeasureRequest | ChallengeRequest
 
 /** `json` is the algorithm's return value, serialized by Python. */
 export type WorkerResponse =

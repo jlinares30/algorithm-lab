@@ -1,28 +1,23 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Variant } from '../catalog/variants'
-import { runVariant } from '../execution/variant'
-import type { VariantRun } from '../execution/variant'
+import { runChallenge } from '../execution/challenge'
+import type { ChallengeRun } from '../execution/challenge'
 import { BugHuntPage } from './BugHuntPage'
 
-vi.mock('../execution/variant', async (original) => ({
-  ...(await original<typeof import('../execution/variant')>()),
-  runVariant: vi.fn(),
+vi.mock('../execution/challenge', async (original) => ({
+  ...(await original<typeof import('../execution/challenge')>()),
+  runChallenge: vi.fn(),
 }))
 
-// The source is never executed here: the Python run is replaced by a recording.
-const challenge: Variant = {
-  id: 'binary_search__ejemplo',
-  algorithm: 'binary_search',
-  description: 'Frase que explica el fallo.',
-  source: '# Error: Frase que explica el fallo.\n',
-}
-
+// Recordings of what Python would return; nothing is searched or changed here.
+const mutation = { line: 6, original: 'LÍNEA ORIGINAL', mutated: 'LÍNEA CAMBIADA', source: 'copia con fallo' }
 const expectedSteps = [
   { left: 0, mid: 2, right: 4, action: 'move_right' },
   { left: 3, mid: 3, right: 4, action: 'found' },
 ]
-const faulty: VariantRun = {
+const faulty: ChallengeRun = {
+  mutation,
+  target: 7,
   expected: { index: 3, steps: expectedSteps },
   actual: {
     status: 'finished',
@@ -32,8 +27,8 @@ const faulty: VariantRun = {
   },
 }
 
-function record(run: VariantRun) {
-  vi.mocked(runVariant).mockReturnValue({ result: Promise.resolve(run), dispose: vi.fn() })
+function record(run: ChallengeRun) {
+  vi.mocked(runChallenge).mockReturnValue({ result: Promise.resolve(run), dispose: vi.fn() })
 }
 
 beforeEach(() => record(faulty))
@@ -44,40 +39,51 @@ afterEach(() => {
 })
 
 async function start(steps = 2) {
-  render(<BugHuntPage challenges={[challenge]} />)
-  fireEvent.change(screen.getByLabelText('Lista'), { target: { value: '1, 3, 5, 7, 9' } })
-  fireEvent.change(screen.getByLabelText('Objetivo'), { target: { value: '7' } })
-  fireEvent.click(screen.getByRole('button', { name: 'Ejecutar reto' }))
+  render(<BugHuntPage />)
+  fireEvent.click(screen.getByRole('button', { name: 'Nuevo reto' }))
   await screen.findByText(`Paso 1 de ${steps} ·`, { exact: false })
 }
 
 describe('Encuentra el error', () => {
-  it('explica cómo añadir retos cuando no hay variantes', () => {
-    render(<BugHuntPage challenges={[]} />)
+  it('no ejecuta Python hasta que se pide un reto', () => {
+    render(<BugHuntPage />)
 
-    expect(screen.getByText(/Todavía no hay retos/)).toBeDefined()
-    expect(screen.queryByRole('button', { name: 'Ejecutar reto' })).toBeNull()
+    expect(runChallenge).not.toHaveBeenCalled()
+    expect(screen.getByRole('option', { name: 'Binary Search' })).toBeDefined()
+    expect(screen.getByRole('option', { name: 'Linear Search' })).toBeDefined()
   })
 
-  it('ejecuta la variante elegida sin revelar su nombre ni su fallo', async () => {
+  it('pide un fallo nuevo con datos generados y no lo revela', async () => {
     await start()
 
-    expect(runVariant).toHaveBeenCalledWith('binary_search', challenge.source, [1, 3, 5, 7, 9], 7)
-    expect(screen.getByRole('option', { name: 'Reto 1 · Binary Search' })).toBeDefined()
-    expect(screen.queryByText(/ejemplo/)).toBeNull()
-    expect(screen.queryByText(/Frase que explica el fallo/)).toBeNull()
+    const input = vi.mocked(runChallenge).mock.calls[0][0]
+    expect(input.algorithm).toBe('binary_search')
+    expect(input.sorted).toBe(true)
+    expect(input.mutation).toBeUndefined()
+    expect(input.numbers.length).toBeGreaterThan(0)
+    expect(screen.getByText(/elementos · objetivo/).textContent).toMatch(/objetivo 7$/)
+    expect(screen.queryByText(/LÍNEA CAMBIADA/)).toBeNull()
   })
 
-  it('valida la entrada antes de ejecutar Python', () => {
-    render(<BugHuntPage challenges={[challenge]} />)
-    fireEvent.change(screen.getByLabelText('Lista'), { target: { value: '3, 1' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Ejecutar reto' }))
+  it('pide datos distintos en cada reto', async () => {
+    await start()
+    fireEvent.click(screen.getByRole('button', { name: 'Nuevo reto' }))
+    await screen.findByText('Paso 1 de 2 ·', { exact: false })
 
-    expect(screen.getByRole('alert').textContent).toContain('ordenada')
-    expect(runVariant).not.toHaveBeenCalled()
+    const [first, second] = vi.mocked(runChallenge).mock.calls.map(([input]) => input)
+    expect([second.seed, second.numbers]).not.toEqual([first.seed, first.numbers])
   })
 
-  it('acepta el primer paso incorrecto y revela el fallo', async () => {
+  it('usa el algoritmo elegido', async () => {
+    render(<BugHuntPage />)
+    fireEvent.change(screen.getByLabelText('Algoritmo'), { target: { value: 'linear_search' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Nuevo reto' }))
+    await screen.findByText('Paso 1 de 2 ·', { exact: false })
+
+    expect(vi.mocked(runChallenge).mock.calls[0][0]).toMatchObject({ algorithm: 'linear_search', sorted: false })
+  })
+
+  it('acepta el primer paso incorrecto y muestra la línea cambiada', async () => {
     await start()
     fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
     fireEvent.click(screen.getByRole('button', { name: 'Aquí falla' }))
@@ -85,7 +91,9 @@ describe('Encuentra el error', () => {
     const feedback = screen.getByRole('status')
     expect(feedback.textContent).toContain('Correcto.')
     expect(feedback.textContent).toContain('left 3 · mid 3 · right 4 · action found')
-    expect(feedback.textContent).toContain('Frase que explica el fallo.')
+    expect(feedback.textContent).toContain('línea 6')
+    expect(feedback.textContent).toContain('LÍNEA ORIGINAL')
+    expect(feedback.textContent).toContain('LÍNEA CAMBIADA')
     expect(screen.queryByRole('button', { name: 'Aquí falla' })).toBeNull()
   })
 
@@ -107,13 +115,17 @@ describe('Encuentra el error', () => {
     expect(screen.getByRole('status').textContent).toContain('Correcto.')
   })
 
-  it('no revela el fallo si con esos datos la variante se comporta bien', async () => {
-    record({ expected: faulty.expected, actual: { status: 'finished', index: 3, steps: expectedSteps, message: null } })
+  it('si con esos datos no falla, no revela el cambio y permite repetirlo con otros datos', async () => {
+    record({ ...faulty, actual: { status: 'finished', index: 3, steps: expectedSteps, message: null } })
     await start()
     fireEvent.click(screen.getByRole('button', { name: 'Con estos datos no falla' }))
 
     const feedback = screen.getByRole('status')
     expect(feedback.textContent).toContain('Correcto.')
-    expect(feedback.textContent).not.toContain('Frase que explica el fallo.')
+    expect(feedback.textContent).not.toContain('LÍNEA CAMBIADA')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mismo fallo, otros datos' }))
+    await screen.findByText('Paso 1 de 2 ·', { exact: false })
+    expect(vi.mocked(runChallenge).mock.calls[1][0].mutation).toEqual(mutation)
   })
 })

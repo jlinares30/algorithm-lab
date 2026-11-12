@@ -1,5 +1,6 @@
 import binarySearchSource from '../../python/algorithms/searching/binary_search.py?raw'
 import linearSearchSource from '../../python/algorithms/searching/linear_search.py?raw'
+import faultsSource from '../../python/challenges/faults.py?raw'
 import type { PythonAlgorithm, WorkerRequest, WorkerResponse } from './pythonWorker'
 
 interface PythonRuntime {
@@ -61,72 +62,15 @@ for _name, _function in _functions.items():
 json.dumps(_report)
 `
 
-// Runs a deliberately faulty variant next to the correct algorithm. The variant
-// is traced so an endless loop is cut short, and whatever steps it recorded
-// before crashing or being stopped are recovered from its own frames.
-const runVariant = `${loadAlgorithms}
-import sys
-
-_LINE_BUDGET = 50000
-_MAX_STEPS = 300
-
-class _Stopped(BaseException):
-    pass
-
-def _recorded_steps(error):
-    found = []
-    trace = error.__traceback__
-    while trace is not None:
-        candidate = trace.tb_frame.f_locals.get("steps")
-        if isinstance(candidate, list):
-            found = candidate
-        trace = trace.tb_next
-    return found
-
-def _clean(steps):
-    return [step for step in steps if isinstance(step, dict)][:_MAX_STEPS]
-
-def _run_variant(name, source, numbers, target):
-    outcome = {"status": "finished", "index": None, "steps": [], "message": None}
-    remaining = [_LINE_BUDGET]
-
-    def tracer(frame, event, arg):
-        if event == "line":
-            remaining[0] -= 1
-            if remaining[0] < 0:
-                raise _Stopped()
-        return tracer
-
-    try:
-        namespace = {"__name__": f"algorithm_lab_variant_{name}"}
-        sys.settrace(tracer)
-        with contextlib.redirect_stdout(io.StringIO()):
-            exec(compile(source, f"{name}_variant.py", "exec"), namespace)
-            result = namespace[name](list(numbers), target)
-        sys.settrace(None)
-        if not isinstance(result, (tuple, list)) or len(result) != 2 or not isinstance(result[1], list):
-            outcome["status"] = "crashed"
-            outcome["message"] = "No devolvió (índice, steps)."
-        else:
-            outcome["index"] = result[0] if isinstance(result[0], int) else None
-            outcome["steps"] = _clean(result[1])
-    except _Stopped as error:
-        sys.settrace(None)
-        outcome["status"] = "endless"
-        outcome["steps"] = _clean(_recorded_steps(error))
-    except Exception as error:
-        sys.settrace(None)
-        outcome["status"] = "crashed"
-        outcome["message"] = f"{type(error).__name__}: {error}"
-        outcome["steps"] = _clean(_recorded_steps(error))
-    return outcome
-
-_name = _request["algorithm"]
-_expected = _functions[_name](list(_request["numbers"]), _request["target"])
-json.dumps({
-    "expected": {"index": _expected[0], "steps": _expected[1]},
-    "actual": _run_variant(_name, _request["source"], _request["numbers"], _request["target"]),
-}, default=str)
+// «Encuentra el error»: the tooling in python/challenges/faults.py changes one
+// thing in the correct algorithm and runs both copies on the same input.
+const challenge = `${loadAlgorithms}
+_tooling = {"__name__": "algorithm_lab_faults"}
+exec(compile(_faults_source, "faults.py", "exec"), _tooling)
+json.dumps(
+    _tooling["build_challenge"](json.loads(_sources_json)[_request["algorithm"]], _request),
+    default=str,
+)
 `
 
 // Module workers keep both WebAssembly initialization and Python off the UI thread.
@@ -145,7 +89,8 @@ self.onmessage = async ({ data }: MessageEvent<WorkerRequest>) => {
     const python = await loadPyodide({ indexURL })
     python.globals.set('_sources_json', JSON.stringify(selected))
     python.globals.set('_request_json', JSON.stringify(data))
-    const program = data.kind === 'measure' ? measure : data.kind === 'variant' ? runVariant : runOnce
+    python.globals.set('_faults_source', faultsSource)
+    const program = data.kind === 'measure' ? measure : data.kind === 'challenge' ? challenge : runOnce
     const json = await python.runPythonAsync(program)
     self.postMessage({ ok: true, json } satisfies WorkerResponse)
   } catch (error) {

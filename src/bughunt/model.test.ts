@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { parseVariant } from '../catalog/variants'
-import { decodeVariantRun } from '../execution/variant'
-import type { RawStep, VariantRun } from '../execution/variant'
-import { describeStep, findFault, getVariantSnapshot } from './model'
+import { decodeChallengeRun } from '../execution/challenge'
+import type { ChallengeRun, RawStep } from '../execution/challenge'
+import { describeStep, findFault, getFaultySnapshot, makeChallengeData } from './model'
 
 // Steps as Python would record them; no search is computed here.
 const correct: RawStep[] = [
@@ -10,7 +9,7 @@ const correct: RawStep[] = [
   { left: 3, mid: 3, right: 4, action: 'found' },
 ]
 
-function run(actual: Partial<VariantRun['actual']>): VariantRun {
+function run(actual: Partial<ChallengeRun['actual']>): Pick<ChallengeRun, 'expected' | 'actual'> {
   return {
     expected: { index: 3, steps: correct },
     actual: { status: 'finished', index: 3, steps: correct, message: null, ...actual },
@@ -18,7 +17,7 @@ function run(actual: Partial<VariantRun['actual']>): VariantRun {
 }
 
 describe('Localizar el fallo', () => {
-  it('no encuentra fallo cuando la variante hace lo mismo', () => {
+  it('no encuentra fallo cuando la copia hace lo mismo', () => {
     expect(findFault('binary_search', run({}))).toEqual({ kind: 'none' })
   })
 
@@ -44,13 +43,13 @@ describe('Localizar el fallo', () => {
   })
 })
 
-describe('Proyección de una variante', () => {
+describe('Proyección de una ejecución con fallo', () => {
   it('describe el paso tal como se registró', () => {
     expect(describeStep('binary_search', { left: 0, mid: null, action: 'x' })).toBe('left 0 · mid — · right (falta) · action x')
   })
 
   it('no dibuja punteros fuera de la lista ni falla con ellos', () => {
-    const snapshot = getVariantSnapshot('binary_search', [1, 2, 3], [{ left: 1, mid: 7, right: 9, action: 'move_right' }], 1)
+    const snapshot = getFaultySnapshot('binary_search', [1, 2, 3], [{ left: 1, mid: 7, right: 9, action: 'move_right' }], 1)
 
     expect(snapshot.items.map((item) => item.state)).toEqual(['discarded', 'active', 'active'])
     expect(snapshot.range).toEqual({ left: 1, right: 2 })
@@ -58,37 +57,50 @@ describe('Proyección de una variante', () => {
 
   it('marca lo ya revisado en una búsqueda lineal', () => {
     const steps = [{ index: 0, action: 'check' }, { index: 2, action: 'check' }]
-    const snapshot = getVariantSnapshot('linear_search', [5, 6, 7], steps, 2)
+    const snapshot = getFaultySnapshot('linear_search', [5, 6, 7], steps, 2)
 
     expect(snapshot.items.map((item) => item.state)).toEqual(['discarded', 'active', 'mid'])
   })
 })
 
-describe('Archivos de variantes', () => {
-  it('lee el algoritmo del nombre y el fallo de la primera línea', () => {
-    const variant = parseVariant('../variants/binary_search__ejemplo.py', '# Error: una frase\ndef binary_search(numbers, target): ...\n')
+describe('Datos de un reto', () => {
+  it('genera una lista ordenada y sin repetidos para Binary Search', () => {
+    for (let round = 0; round < 20; round++) {
+      const { numbers, targets, sorted } = makeChallengeData('binary_search')
 
-    expect(variant).toMatchObject({ id: 'binary_search__ejemplo', algorithm: 'binary_search', description: 'una frase' })
+      expect(sorted).toBe(true)
+      expect(numbers).toEqual([...new Set(numbers)].sort((a, b) => a - b))
+      expect(numbers.length).toBeGreaterThanOrEqual(6)
+      expect(targets.some((target) => !numbers.includes(target))).toBe(true)
+      expect(numbers.every((value) => targets.includes(value))).toBe(true)
+    }
   })
 
-  it('omite archivos que no siguen el formato', () => {
-    expect(parseVariant('../variants/binary_search.py', '# Error: x')).toBeNull()
-    expect(parseVariant('../variants/otro__x.py', '# Error: x')).toBeNull()
-    expect(parseVariant('../variants/binary_search__x.py', 'def binary_search(): ...')).toBeNull()
+  it('no exige orden para Linear Search', () => {
+    expect(makeChallengeData('linear_search').sorted).toBe(false)
   })
 })
 
-describe('Decodificar la ejecución de una variante', () => {
+describe('Decodificar un reto', () => {
+  const mutation = { line: 6, original: 'a', mutated: 'b', source: 'c' }
+
   it('acepta pasos que rompen el contrato y descarta lo que no es un paso', () => {
     const json = JSON.stringify({
+      mutation,
+      target: 7,
       expected: { index: 3, steps: correct },
       actual: { status: 'endless', index: null, steps: [{ mid: 99 }, 'x', null], message: null },
     })
 
-    expect(decodeVariantRun(json).actual).toEqual({ status: 'endless', index: null, steps: [{ mid: 99 }], message: null })
+    const decoded = decodeChallengeRun(json)
+    expect(decoded.actual).toEqual({ status: 'endless', index: null, steps: [{ mid: 99 }], message: null })
+    expect(decoded.mutation).toEqual(mutation)
+    expect(decoded.target).toBe(7)
   })
 
-  it('rechaza una respuesta sin la ejecución correcta', () => {
-    expect(() => decodeVariantRun(JSON.stringify({ actual: { status: 'finished', steps: [] } }))).toThrow(/inválida/)
+  it('rechaza una respuesta sin el cambio realizado o sin la ejecución correcta', () => {
+    const actual = { status: 'finished', index: 3, steps: [], message: null }
+    expect(() => decodeChallengeRun(JSON.stringify({ target: 7, expected: { index: 3, steps: [] }, actual }))).toThrow(/inválido/)
+    expect(() => decodeChallengeRun(JSON.stringify({ mutation, target: 7, actual }))).toThrow(/inválido/)
   })
 })

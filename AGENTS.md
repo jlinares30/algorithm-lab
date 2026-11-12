@@ -10,6 +10,7 @@
 ## Arquitectura y alcance
 
 - Mantener los algoritmos en `python/algorithms` y sus pruebas en `python/tests`.
+- `python/challenges` contiene herramientas que operan sobre los algoritmos (el generador de retos «encuentra el error»), no algoritmos educativos.
 - Mantener Python desacoplado de React: la ejecución en el navegador se realiza mediante Pyodide dentro de un Web Worker dedicado (`src/execution/python.worker.ts`, con su cliente y protocolo en `src/execution/pythonWorker.ts`), transmitiendo eventos inmutables a la interfaz.
 - La interfaz de usuario reside en `src`, usando `src/components` para componentes compartidos y `src/visualizers` para los visualizadores de cada algoritmo.
 - Separación de responsabilidades: el estado del algoritmo, el historial de eventos y los controles de reproducción (`usePlayback`, `src/playback/`) son independientes del renderizado y de las bibliotecas de animación o 3D.

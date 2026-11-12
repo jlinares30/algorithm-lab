@@ -1,6 +1,6 @@
 import type { ArrayItem } from '../components/ArrayVisualization'
 import type { PythonAlgorithm } from '../execution/pythonWorker'
-import type { RawStep, VariantRun } from '../execution/variant'
+import type { ChallengeRun, RawStep } from '../execution/challenge'
 
 // The keys each algorithm's contract defines. Extra keys are ignored, as in the labs.
 const stepKeys: Record<PythonAlgorithm, string[]> = {
@@ -14,7 +14,7 @@ export type Fault =
   | { kind: 'step'; position: number }
   /** Every recorded step matches, but the run ends wrong: early, crashed, endless or with another result. */
   | { kind: 'end' }
-  /** With this input the variant behaves exactly like the correct algorithm. */
+  /** With this input the faulty copy behaves exactly like the correct algorithm. */
   | { kind: 'none' }
 
 function sameStep(algorithm: PythonAlgorithm, a: RawStep, b: RawStep | undefined) {
@@ -23,7 +23,7 @@ function sameStep(algorithm: PythonAlgorithm, a: RawStep, b: RawStep | undefined
 
 // The answer comes from comparing two recorded Python runs, never from
 // re-running the search in TypeScript.
-export function findFault(algorithm: PythonAlgorithm, { expected, actual }: VariantRun): Fault {
+export function findFault(algorithm: PythonAlgorithm, { expected, actual }: Pick<ChallengeRun, 'expected' | 'actual'>): Fault {
   const differs = actual.steps.findIndex((step, index) => !sameStep(algorithm, step, expected.steps[index]))
   if (differs !== -1) return { kind: 'step', position: differs + 1 }
   const endsWrong = actual.status !== 'finished'
@@ -46,7 +46,7 @@ export function describeStep(algorithm: PythonAlgorithm, step: RawStep) {
     .join(' · ')
 }
 
-export function describeOutcome({ status, index, message }: VariantRun['actual']) {
+export function describeOutcome({ status, index, message }: ChallengeRun['actual']) {
   if (status === 'endless') return 'No termina: la ejecución se cortó.'
   if (status === 'crashed') return `Se detiene con un error: ${message ?? 'desconocido'}`
   return `Devuelve ${index ?? 'un valor que no es un índice'}.`
@@ -54,9 +54,9 @@ export function describeOutcome({ status, index, message }: VariantRun['actual']
 
 const integer = (value: unknown): number | null => Number.isInteger(value) ? value as number : null
 
-// Projects whatever the variant recorded onto the list. Values out of range are
+// Projects whatever the faulty copy recorded onto the list. Values out of range are
 // simply not drawn; the step text still shows them as recorded.
-export function getVariantSnapshot(algorithm: PythonAlgorithm, numbers: number[], steps: RawStep[], position: number) {
+export function getFaultySnapshot(algorithm: PythonAlgorithm, numbers: number[], steps: RawStep[], position: number) {
   const step = steps[Math.min(position, steps.length) - 1] as RawStep | undefined
   const found = step?.action === 'found'
   if (algorithm === 'binary_search') {
@@ -79,4 +79,20 @@ export function getVariantSnapshot(algorithm: PythonAlgorithm, numbers: number[]
     return { value, index, state, pending: false, markers: [], label: `Índice ${index}: ${value}` }
   })
   return { items, pointers: step ? [{ label: 'i', index: current }] : [], range: null }
+}
+
+/** Algorithms that only work on a sorted list. */
+const needsSorted: PythonAlgorithm[] = ['binary_search']
+
+// Input data only: a random list and the targets Python may choose from
+// (every value in the list, plus values around and between them that are absent).
+export function makeChallengeData(algorithm: PythonAlgorithm, random: () => number = Math.random) {
+  const sorted = needsSorted.includes(algorithm)
+  const size = 6 + Math.floor(random() * 6)
+  const pool = new Set<number>()
+  while (pool.size < size) pool.add(Math.floor(random() * 90) + 5)
+  const numbers = [...pool]
+  if (sorted) numbers.sort((a, b) => a - b)
+  const absent = [0, 99, ...numbers.map((value) => value + 1)].filter((value) => !pool.has(value))
+  return { numbers, targets: [...numbers, ...absent], sorted, seed: Math.floor(random() * 2 ** 31) }
 }
