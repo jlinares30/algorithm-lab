@@ -32,6 +32,23 @@ export function findFault(algorithm: PythonAlgorithm, { expected, actual }: Pick
   return endsWrong ? { kind: 'end' } : { kind: 'none' }
 }
 
+// A run that never ends is cut by Python after hundreds of steps, almost all of
+// them the same few repeated. Keeps the steps up to two rounds of that
+// repetition (and never fewer than needed to show the fault).
+export function condenseEndless<T extends Pick<ChallengeRun, 'expected' | 'actual'>>(algorithm: PythonAlgorithm, run: T): T {
+  const steps = run.actual.steps
+  if (run.actual.status !== 'endless') return run
+  for (let period = 1; period <= 8; period++) {
+    let start = steps.length - period
+    while (start > 0 && sameStep(algorithm, steps[start - 1], steps[start - 1 + period])) start--
+    if (start < 0 || steps.length - start < period * 3) continue
+    const fault = findFault(algorithm, run)
+    const keep = Math.max(start + period * 2, fault.kind === 'step' ? fault.position : 0)
+    return keep < steps.length ? { ...run, actual: { ...run.actual, steps: steps.slice(0, keep) } } : run
+  }
+  return run
+}
+
 export function sameFault(a: Fault, b: Fault) {
   return a.kind === b.kind && (a.kind !== 'step' || a.position === (b as { position: number }).position)
 }
@@ -47,7 +64,7 @@ export function describeStep(algorithm: PythonAlgorithm, step: RawStep) {
 }
 
 export function describeOutcome({ status, index, message }: ChallengeRun['actual']) {
-  if (status === 'endless') return 'No termina: la ejecución se cortó.'
+  if (status === 'endless') return 'No termina: seguiría repitiendo pasos sin fin, así que la ejecución se cortó.'
   if (status === 'crashed') return `Se detiene con un error: ${message ?? 'desconocido'}`
   return `Devuelve ${index ?? 'un valor que no es un índice'}.`
 }

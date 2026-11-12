@@ -90,7 +90,8 @@ def run(function, numbers, target):
         else:
             outcome["index"] = result[0] if isinstance(result[0], int) else None
             outcome["steps"] = _clean(result[1])
-    except _Stopped as error:
+    # Recursion that never stops runs out of stack before it runs out of lines.
+    except (_Stopped, RecursionError) as error:
         sys.settrace(None)
         outcome["status"] = "endless"
         outcome["steps"] = _clean(_recorded_steps(error))

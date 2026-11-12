@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { describeOutcome, describeStep, explainFault, findFault, getFaultySnapshot, needsSorted } from '../bughunt/model'
+import { condenseEndless, describeOutcome, describeStep, explainFault, findFault, getFaultySnapshot, needsSorted } from '../bughunt/model'
 import { algorithms } from '../catalog/algorithms'
 import { useCodeTheme } from '../code/theme'
 import { ArrayVisualization } from '../components/ArrayVisualization'
@@ -24,7 +24,8 @@ const randomSeed = () => Math.floor(Math.random() * 2 ** 31)
 type FailingCase = Extract<CheckResult, { status: 'wrong' }>['case']
 
 /** Steps recorded by the completed code on one input where it differs from the original. */
-function FailingRun({ algorithm, failing }: { algorithm: PythonAlgorithm; failing: FailingCase }) {
+function FailingRun({ algorithm, failing: recorded }: { algorithm: PythonAlgorithm; failing: FailingCase }) {
+  const failing = condenseEndless(algorithm, recorded)
   const fault = findFault(algorithm, failing)
   const stepCount = failing.actual.steps.length
   // Opens on the place where the two runs part ways.
