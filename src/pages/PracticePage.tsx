@@ -65,6 +65,7 @@ export function PracticePage() {
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [result, setResult] = useState<CheckResult | null>(null)
   const [revealed, setRevealed] = useState(false)
+  const [showRecords, setShowRecords] = useState(false)
   const [loading, setLoading] = useState<'exercise' | 'check' | null>(null)
   const [error, setError] = useState('')
   const [codeTheme, setCodeTheme] = useCodeTheme()
@@ -105,6 +106,9 @@ export function PracticePage() {
   }
 
   const blanks = exercise?.lines.filter((line) => line.blank) ?? []
+  // Step records are folded into one line each unless the learner asks to see them.
+  const folds = showRecords ? [] : exercise?.records ?? []
+  const visibleLines = exercise?.lines.filter((line) => !folds.some((fold) => line.number > fold.start && line.number <= fold.end)) ?? []
   const complete = blanks.every((line) => (answers[line.number] ?? '').trim() !== '')
 
   function check(event: FormEvent<HTMLFormElement>) {
@@ -169,11 +173,17 @@ export function PracticePage() {
         {exercise && (
           <form onSubmit={check} className="space-y-5">
             <ol aria-label="Código del algoritmo" data-code-theme={codeTheme} className="overflow-x-auto rounded-xl border border-slate-800 py-3 font-mono">
-              {exercise.lines.map((line) => (
+              {visibleLines.map((line) => {
+                const fold = folds.find((item) => item.start === line.number)
+                return (
                 <li key={line.number} className={`flex min-w-max items-start gap-4 px-4 ${line.blank ? 'code-blank py-1' : ''}`} data-blank={line.blank}>
                   <span aria-hidden="true" className="code-muted w-6 shrink-0 select-none text-right">{line.number}</span>
                   <div style={{ paddingLeft: `${line.indent}ch` }} className="flex-1">
-                    {line.blank ? (
+                    {fold ? (
+                      <span className="tok-comment whitespace-pre">
+                        {fold.action ? `# registra el paso «${fold.action}»` : '# registra un paso'}
+                      </span>
+                    ) : line.blank ? (
                       <>
                         <input
                           className="code-input w-[56ch] max-w-full"
@@ -196,7 +206,8 @@ export function PracticePage() {
                     )}
                   </div>
                 </li>
-              ))}
+                )
+              })}
             </ol>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -204,6 +215,12 @@ export function PracticePage() {
                 {loading === 'check' ? 'Comprobando…' : 'Comprobar'}
               </button>
               <button type="button" className="control" disabled={revealed} onClick={() => setRevealed(true)}>Ver solución</button>
+              {exercise.records.length > 0 && (
+                <label className="view-option">
+                  <input type="checkbox" checked={showRecords} onChange={(event) => setShowRecords(event.target.checked)} />
+                  Mostrar registro de pasos
+                </label>
+              )}
             </div>
 
             {result?.status === 'syntax' && (

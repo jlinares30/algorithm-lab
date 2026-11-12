@@ -17,7 +17,12 @@ const exercise: Exercise = {
     { number: 2, indent: 4, text: 'LÍNEA OCULTA DOS', blank: true },
     { number: 3, indent: 4, text: 'línea visible', blank: false },
     { number: 4, indent: 8, text: 'LÍNEA OCULTA CUATRO', blank: true },
+    { number: 5, indent: 8, text: 'registro(', blank: false },
+    { number: 6, indent: 12, text: 'DETALLE DEL REGISTRO', blank: false },
+    { number: 7, indent: 8, text: ')', blank: false },
+    { number: 8, indent: 4, text: 'registro suelto', blank: false },
   ],
+  records: [{ start: 5, end: 7, action: 'avanza' }, { start: 8, end: 8, action: null }],
 }
 
 const wrong: CheckResult = {
@@ -133,6 +138,22 @@ describe('Completa el código', () => {
   })
 })
 
+describe('Registro de pasos', () => {
+  it('lo pliega en una línea con el nombre de la acción y lo muestra entero si se pide', async () => {
+    await start()
+
+    expect(screen.getByText('# registra el paso «avanza»')).toBeDefined()
+    expect(screen.getByText('# registra un paso')).toBeDefined()
+    expect(screen.queryByText('DETALLE DEL REGISTRO')).toBeNull()
+    expect(screen.getAllByRole('listitem')).toHaveLength(6)
+
+    fireEvent.click(screen.getByLabelText('Mostrar registro de pasos'))
+    expect(screen.getByText('DETALLE DEL REGISTRO')).toBeDefined()
+    expect(screen.queryByText(/# registra/)).toBeNull()
+    expect(screen.getAllByRole('listitem')).toHaveLength(8)
+  })
+})
+
 describe('Tema del código', () => {
   it('colorea el código con el tema elegido y lo recuerda', async () => {
     await start()
@@ -162,6 +183,7 @@ describe('Decodificar ejercicios', () => {
 
     expect(decodeExercise(JSON.stringify(exercise))).toEqual(exercise)
     expect(() => decodeExercise(JSON.stringify({ lines }))).toThrow(/inválido/)
+    expect(decodeExercise(JSON.stringify({ lines: exercise.lines })).records).toEqual([])
   })
 
   it('decodifica cada tipo de comprobación y rechaza las incompletas', () => {

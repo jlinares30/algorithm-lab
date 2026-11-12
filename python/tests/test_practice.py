@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from challenges.practice import blank_candidates, build_exercise, check_exercise
+from challenges.practice import blank_candidates, build_exercise, check_exercise, step_records
 
 SEARCHING = Path(__file__).resolve().parents[1] / "algorithms" / "searching"
 ALGORITHMS = [("binary_search", True), ("linear_search", False)]
@@ -47,6 +47,31 @@ def test_exercise_covers_the_function_and_hides_the_requested_lines(name):
         assert " " * line["indent"] + line["text"] == lines[line["number"] - 1].rstrip()
         if line["blank"]:
             assert line["number"] in blank_candidates(source_of(name), name)
+
+
+@pytest.mark.parametrize("name", [name for name, _ in ALGORITHMS])
+def test_step_records_cover_whole_statements_and_never_a_hidden_line(name):
+    lines = source_of(name).split("\n")
+    records = step_records(source_of(name), name)
+    exercise = build_exercise(source_of(name), {"algorithm": name, "seed": 3, "count": 2})
+
+    assert exercise["records"] == records
+    assert len(records) >= 3
+    for record in records:
+        assert lines[record["start"] - 1].strip().startswith("steps.")
+        assert lines[record["end"] - 1].strip().endswith(")")
+        assert record["action"] and f'"{record["action"]}"' in "".join(lines[record["start"] - 1 : record["end"]])
+        assert not set(range(record["start"], record["end"] + 1)) & set(blank_candidates(source_of(name), name))
+    assert len({record["action"] for record in records}) == len(records)
+
+
+def test_step_record_without_a_plain_action_has_no_label():
+    source = "def ejemplo(numbers, target):\n    steps = []\n    steps.append(target)\n    steps.append({'action': target})\n    return -1, steps\n"
+
+    assert step_records(source, "ejemplo") == [
+        {"start": 3, "end": 3, "action": None},
+        {"start": 4, "end": 4, "action": None},
+    ]
 
 
 def test_exercises_vary_with_the_seed_and_cap_the_count():

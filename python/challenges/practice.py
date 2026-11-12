@@ -50,8 +50,36 @@ def blank_candidates(source, name):
     return sorted(found)
 
 
+def step_records(source, name):
+    """Statements that only record a step: calls on the `steps` list.
+
+    Each is {"start", "end", "action"}, with the lines it spans and the value
+    of its "action" key when it is a plain string (None otherwise). The page
+    folds them so the algorithm's logic reads without the bookkeeping.
+    """
+    function = _function(source.replace("\r\n", "\n"), name)
+    if function is None:
+        return []
+    records = []
+    for node in ast.walk(function):
+        call = node.value if isinstance(node, ast.Expr) else None
+        if not isinstance(call, ast.Call) or not isinstance(call.func, ast.Attribute):
+            continue
+        if not isinstance(call.func.value, ast.Name) or call.func.value.id != "steps":
+            continue
+        action = None
+        for argument in call.args:
+            if isinstance(argument, ast.Dict):
+                for key, value in zip(argument.keys, argument.values):
+                    if isinstance(key, ast.Constant) and key.value == "action":
+                        if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                            action = value.value
+        records.append({"start": node.lineno, "end": node.end_lineno, "action": action})
+    return sorted(records, key=lambda record: record["start"])
+
+
 def build_exercise(source, request):
-    """The function's lines, with `count` of them marked as blanks.
+    """The function's lines, with `count` of them marked as blanks, and its step records.
 
     request: {"algorithm", "seed", "count"}.
     """
@@ -73,7 +101,8 @@ def build_exercise(source, request):
                 "blank": number in hidden,
             }
             for number in range(function.lineno, function.end_lineno + 1)
-        ]
+        ],
+        "records": step_records(source, name),
     }
 
 

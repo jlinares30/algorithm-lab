@@ -266,6 +266,12 @@ limitan a comparación, descarte y zoom de Binary Search.
 
 No hay backend, autenticación ni base de datos.
 
+### Registro de pasos plegado
+
+En «Completa el código», cada `steps.append(...)` se muestra plegado en una línea con el
+nombre de su acción, para leer la lógica sin la instrumentación. «Mostrar registro de pasos»
+lo despliega. Los números de línea siguen siendo los del archivo.
+
 ### Tema del código
 
 El código se muestra con resaltado de sintaxis (`src/code/highlight.ts`, sin dependencias)

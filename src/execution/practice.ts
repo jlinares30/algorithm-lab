@@ -13,8 +13,17 @@ export interface ExerciseLine {
   blank: boolean
 }
 
+/** A statement that only records a step; the page folds its lines into one. */
+export interface StepRecord {
+  start: number
+  end: number
+  /** Value of its "action" key, when it is a plain string. */
+  action: string | null
+}
+
 export interface Exercise {
   lines: ExerciseLine[]
+  records: StepRecord[]
 }
 
 export type CheckResult =
@@ -31,13 +40,17 @@ export type CheckResult =
   }
 
 export function decodeExercise(json: string): Exercise {
-  const value = JSON.parse(json) as { lines?: unknown } | null
+  const value = JSON.parse(json) as { lines?: unknown; records?: unknown } | null
   const lines = Array.isArray(value?.lines) ? value.lines as Partial<ExerciseLine>[] : []
   const valid = lines.length > 0 && lines.every((line) =>
     Number.isInteger(line?.number) && Number.isInteger(line?.indent)
     && typeof line?.text === 'string' && typeof line?.blank === 'boolean')
   if (!valid || !lines.some((line) => line.blank)) throw new Error('Python devolvió un ejercicio inválido.')
-  return { lines: lines as ExerciseLine[] }
+  const records = (Array.isArray(value?.records) ? value.records as Partial<StepRecord>[] : []).flatMap((record) =>
+    Number.isInteger(record?.start) && Number.isInteger(record?.end) && record.start! <= record.end!
+      ? [{ start: record.start!, end: record.end!, action: typeof record.action === 'string' ? record.action : null }]
+      : [])
+  return { lines: lines as ExerciseLine[], records }
 }
 
 export function decodeCheckResult(json: string): CheckResult {
