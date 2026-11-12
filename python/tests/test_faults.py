@@ -134,3 +134,11 @@ def test_recursion_without_end_counts_as_endless_and_keeps_its_steps():
 
     assert outcome["status"] == "endless"
     assert outcome["steps"] == [{"action": "again"}] * MAX_STEPS
+
+
+@pytest.mark.parametrize(("name", "sorted_input"), ALGORITHMS)
+def test_most_challenges_have_several_steps_to_choose_from(name, sorted_input):
+    runs = [build_challenge(source_of(name), request_for(name, sorted_input, seed))["actual"] for seed in range(60)]
+    single = sum(len(actual["steps"]) < 2 for actual in runs)
+
+    assert single <= 60 * 0.3

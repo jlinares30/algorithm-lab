@@ -198,30 +198,57 @@ def build_challenge(source, request):
     numbers = request["numbers"]
     rng = random.Random(request["seed"])
     correct = load(source, name)
+    targets = request["targets"]
+
+    def outcomes(function):
+        return {t: run(function, numbers, t) for t in targets}
+
+    def worth_studying(results):
+        """Targets that expose the fault in a run of several steps.
+
+        A run of one step has a single place to mark, so it teaches nothing.
+        """
+        return [
+            t for t in targets
+            if len(results[t]["steps"]) >= 2 and not same(correct(list(numbers), t), results[t])
+        ]
+
     mutation = request.get("mutation")
     faulty = load(mutation["source"], name) if mutation else None
+    results = outcomes(faulty) if faulty else None
     if faulty is None:
         cases = battery(rng, request["sorted"])
         candidates = mutations(source, name)
         rng.shuffle(candidates)
+        # Now and then any fault will do, so the short ones still turn up.
+        any_fault = rng.random() < 0.15
         for candidate in candidates:
             function = load(candidate["source"], name)
-            if function and any(not same(correct(list(n), t), run(function, n, t)) for n, t in cases):
-                mutation, faulty = candidate, function
+            if not function or all(same(correct(list(n), t), run(function, n, t)) for n, t in cases):
+                continue
+            found = outcomes(function)
+            if faulty is None:
+                mutation, faulty, results = candidate, function, found
+            if any_fault:
+                break
+            if worth_studying(found):
+                mutation, faulty, results = candidate, function, found
                 break
     if faulty is None:
         raise ValueError("No se pudo generar un fallo para este algoritmo.")
 
     # Most challenges use a target that exposes the fault; a few do not, so
     # «con estos datos no falla» stays a real answer.
-    exposing = [t for t in request["targets"] if not same(correct(list(numbers), t), run(faulty, numbers, t))]
-    hidden = [t for t in request["targets"] if t not in exposing]
+    exposing = [t for t in targets if not same(correct(list(numbers), t), results[t])]
+    hidden = [t for t in targets if t not in exposing]
     pool = exposing if exposing and (not hidden or rng.random() < 0.85) else hidden
+    if pool is exposing:
+        pool = worth_studying(results) or exposing
     target = rng.choice(pool)
     expected = correct(list(numbers), target)
     return {
         "mutation": mutation,
         "target": target,
         "expected": {"index": expected[0], "steps": expected[1]},
-        "actual": run(faulty, numbers, target),
+        "actual": results[target],
     }
