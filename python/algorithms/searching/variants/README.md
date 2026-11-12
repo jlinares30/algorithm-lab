@@ -1,8 +1,8 @@
 # Variantes con error
 
 Versiones de los algoritmos de búsqueda con un fallo puesto a propósito, para el
-modo «Encuentra el error» de la interfaz. Las escribe el estudiante a mano, igual
-que los algoritmos correctos.
+modo «Encuentra el error» de la interfaz. Cada una es una copia del algoritmo
+correcto con una sola línea cambiada; abrir estos archivos revela la solución del reto.
 
 ## Formato
 
